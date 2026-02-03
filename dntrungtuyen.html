@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám Phá Đường Trung Tuyến</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; }
+        .hidden-text { filter: blur(4px); transition: filter 0.3s; cursor: pointer; }
+        .hidden-text:hover, .revealed { filter: blur(0); }
+    </style>
+</head>
+<body class="bg-blue-50 h-screen flex flex-col items-center justify-center p-4">
+
+    <div class="bg-white p-8 rounded-2xl shadow-xl max-w-2xl w-full">
+        <h1 class="text-2xl font-bold text-blue-800 text-center mb-6">QUAN SÁT VÀ NHẬN XÉT</h1>
+
+        <div class="flex flex-col md:flex-row items-center gap-8">
+            <!-- Phần Hình ảnh -->
+            <div class="relative bg-white border border-gray-200 rounded-lg p-2">
+                <canvas id="conceptCanvas" width="350" height="300"></canvas>
+            </div>
+
+            <!-- Phần Câu hỏi gợi mở -->
+            <div class="flex-1 space-y-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="font-bold text-blue-900 mb-2">Câu hỏi gợi ý:</p>
+                    <ul class="list-disc pl-5 text-gray-700 space-y-2">
+                        <li>Quan sát cạnh <b>BC</b>. Điểm <b>M</b> chia cạnh BC thành hai đoạn như thế nào?</li>
+                        <li>Đoạn thẳng <b>AM</b> nối từ đâu đến đâu?</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
+                    <p class="font-bold text-yellow-800 mb-2">Khái niệm:</p>
+                    <p class="text-gray-800 leading-relaxed">
+                        Đoạn thẳng nối từ <span class="font-bold text-indigo-600 border-b-2 border-indigo-300 px-1 hidden-text" onclick="this.classList.add('revealed')">đỉnh</span> của tam giác tới <span class="font-bold text-indigo-600 border-b-2 border-indigo-300 px-1 hidden-text" onclick="this.classList.add('revealed')">trung điểm</span> cạnh đối diện gọi là <b>đường trung tuyến</b>.
+                    </p>
+                </div>
+
+                <!-- Thêm phần suy luận số lượng đường trung tuyến -->
+                <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-400">
+                    <p class="font-bold text-green-800 mb-2">Suy luận:</p>
+                    <p class="text-gray-800 leading-relaxed">
+                        Tương tự, ta có thể vẽ đường trung tuyến xuất phát từ đỉnh B và đỉnh C. <br>
+                        Vậy mỗi tam giác có tất cả <span class="font-bold text-indigo-600 border-b-2 border-indigo-300 px-1 hidden-text" onclick="this.classList.add('revealed')">3</span> đường trung tuyến.
+                    </p>
+                </div>
+
+                <p class="text-xs text-gray-400 mt-2 text-center italic">(Di chuột hoặc chạm vào từ bị mờ để xem đáp án)</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sử dụng block scope để tránh lỗi khai báo lại biến
+        {
+            const canvas = document.getElementById('conceptCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Tọa độ các điểm (Đã chỉnh A lệch sang trái để tạo tam giác thường)
+            const A = { x: 100, y: 50 }; 
+            const B = { x: 50, y: 250 };
+            const C = { x: 300, y: 250 };
+            // Tính trung điểm M của BC
+            const M = { x: (B.x + C.x) / 2, y: (B.y + C.y) / 2 };
+
+            function draw() {
+                // Xóa canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 1. Vẽ Tam giác ABC
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(B.x, B.y);
+                ctx.lineTo(C.x, C.y);
+                ctx.closePath();
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 2. Vẽ đoạn thẳng AM (Màu đỏ nổi bật)
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(M.x, M.y);
+                ctx.strokeStyle = '#dc2626'; // Red
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                // 3. Vẽ điểm M
+                ctx.beginPath();
+                ctx.arc(M.x, M.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#dc2626';
+                ctx.fill();
+
+                // 4. Ký hiệu bằng nhau trên BM và MC (Hai gạch chéo //)
+                drawTickMark(B, M);
+                drawTickMark(M, C);
+
+                // 5. Vẽ tên các điểm
+                drawLabel(A, 'A (Đỉnh)', 'top');
+                drawLabel(B, 'B', 'left');
+                drawLabel(C, 'C', 'right');
+                drawLabel(M, 'M', 'bottom');
+                
+                // Chú thích M là trung điểm
+                ctx.font = 'italic 12px Arial';
+                ctx.fillStyle = '#666';
+                ctx.fillText('Trung điểm', M.x - 25, M.y + 35);
+            }
+
+            function drawTickMark(P1, P2) {
+                // Tìm trung điểm của đoạn thẳng P1P2 để vẽ ký hiệu
+                const midX = (P1.x + P2.x) / 2;
+                const midY = (P1.y + P2.y) / 2;
+                
+                ctx.beginPath();
+                ctx.strokeStyle = '#dc2626';
+                ctx.lineWidth = 2;
+                
+                // Vẽ 2 gạch chéo nhỏ
+                const size = 6;
+                ctx.moveTo(midX - 3, midY - size); ctx.lineTo(midX - 3, midY + size);
+                ctx.moveTo(midX + 3, midY - size); ctx.lineTo(midX + 3, midY + size);
+                ctx.stroke();
+            }
+
+            function drawLabel(p, text, pos) {
+                ctx.font = 'bold 16px Arial';
+                ctx.fillStyle = '#000';
+                let x = p.x, y = p.y;
+                
+                if (pos === 'top') { y -= 10; x -= 10; }
+                if (pos === 'bottom') { y += 20; x -= 5; }
+                if (pos === 'left') { x -= 20; y += 5; }
+                if (pos === 'right') { x += 10; y += 5; }
+
+                ctx.fillText(text, x, y);
+            }
+
+            // Vẽ ngay khi tải xong
+            draw();
+        }
+    </script>
+</body>
+</html>
