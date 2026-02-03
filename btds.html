@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biểu Thức Đại Số - Chân Trời Sáng Tạo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f0f9ff;
+            background-image: radial-gradient(#bae6fd 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        h1, h2, h3, .hand-font {
+            font-family: 'Patrick Hand', cursive;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px 20px 0 20px;
+            display: inline-block;
+            font-family: 'Patrick Hand', cursive;
+            font-size: 1.5rem;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+            position: absolute;
+            top: -20px;
+            right: 0;
+        }
+        .notebook-paper {
+            background-color: #fef3c7;
+            background-image: linear-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 100% 1.5rem;
+            line-height: 1.5rem;
+            position: relative;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
+        }
+        .notebook-paper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 40px;
+            height: 100%;
+            width: 2px;
+            background-color: #f87171;
+        }
+        .expression-tag {
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+        .expression-tag:active { transform: scale(0.95); }
+        
+        .quiz-option {
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .quiz-option:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .hidden-section {
+            opacity: 0.5;
+            pointer-events: none;
+            filter: blur(2px);
+            transition: all 0.5s ease;
+        }
+        .active-section {
+            opacity: 1;
+            pointer-events: auto;
+            filter: blur(0);
+        }
+        
+        /* Frame Diagram Styles */
+        .frame-diagram {
+            width: 200px;
+            height: 160px;
+            background-color: #a5b4fc; /* Frame color */
+            border: 2px solid #4338ca;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .frame-inner {
+            width: 140px;
+            height: 100px;
+            background-color: white;
+            border: 1px dashed #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex justify-center">
+
+    <div class="max-w-5xl w-full space-y-16">
+
+        <!-- HEADER -->
+        <header class="text-center relative py-8">
+            <h1 class="text-5xl md:text-6xl text-blue-900 mb-2 drop-shadow-md">Biểu Thức Đại Số 📐</h1>
+            <p class="text-xl text-blue-700 font-bold bg-white/80 inline-block px-6 py-2 rounded-full border border-blue-200">
+                Toán 7 - Chân Trời Sáng Tạo (Trang 25-28)
+            </p>
+        </header>
+
+        <!-- PHẦN 1: THỰC HÀNH 1 - NHẬN DẠNG -->
+        <section id="section-1" class="relative bg-white rounded-[2rem] p-8 pt-12 shadow-xl border-4 border-green-100">
+            <div class="section-header bg-green-500">🧩 Thực Hành 1 (Trang 26)</div>
+            <p class="text-center text-gray-600 mb-6 italic">Hãy giúp bạn Ong phân loại các biểu thức sau vào đúng tổ nhé!</p>
+
+            <div id="drag-container" class="flex flex-wrap justify-center gap-4 mb-8 min-h-[60px]">
+                <div onclick="moveItem(this)" class="expression-tag bg-white border-2 border-gray-300 text-gray-700 text-lg font-mono px-4 py-2 rounded-full shadow-sm hover:shadow-md" data-type="dai-so">a² + b</div>
+                <div onclick="moveItem(this)" class="expression-tag bg-white border-2 border-gray-300 text-gray-700 text-lg font-mono px-4 py-2 rounded-full shadow-sm hover:shadow-md" data-type="so">23 + 8 . 2</div>
+                <div onclick="moveItem(this)" class="expression-tag bg-white border-2 border-gray-300 text-gray-700 text-lg font-mono px-4 py-2 rounded-full shadow-sm hover:shadow-md" data-type="dai-so">4x</div>
+                <div onclick="moveItem(this)" class="expression-tag bg-white border-2 border-gray-300 text-gray-700 text-lg font-mono px-4 py-2 rounded-full shadow-sm hover:shadow-md" data-type="so">15 : 3</div>
+                <div onclick="moveItem(this)" class="expression-tag bg-white border-2 border-gray-300 text-gray-700 text-lg font-mono px-4 py-2 rounded-full shadow-sm hover:shadow-md" data-type="dai-so">2(y+1)</div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8">
+                <div id="zone-so" class="bg-orange-50 rounded-3xl p-6 border-2 border-dashed border-orange-400 min-h-[150px] relative">
+                    <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-orange-100 px-4 py-1 rounded-full font-bold text-orange-700 border border-orange-300">Biểu Thức Số</div>
+                    <div class="content flex flex-wrap gap-2 pt-4 justify-center"></div>
+                </div>
+                <div id="zone-dai-so" class="bg-purple-50 rounded-3xl p-6 border-2 border-dashed border-purple-400 min-h-[150px] relative">
+                    <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-purple-100 px-4 py-1 rounded-full font-bold text-purple-700 border border-purple-300">Biểu Thức Đại Số</div>
+                    <div class="content flex flex-wrap gap-2 pt-4 justify-center"></div>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button onclick="checkPractice1()" class="bg-green-500 hover:bg-green-600 text-white font-bold px-6 py-2 rounded-full shadow-lg transition transform active:scale-95">Kiểm Tra & Đi Tiếp</button>
+                <p id="p1-result" class="mt-2 font-bold text-lg"></p>
+            </div>
+        </section>
+
+        <!-- PHẦN 2: SỔ TAY KIẾN THỨC 1 (KHÁI NIỆM) -->
+        <section id="section-notebook-1" class="hidden-section relative bg-white rounded-[2rem] p-8 pt-12 shadow-xl border-4 border-yellow-200">
+            <div class="section-header bg-yellow-500">📝 Sổ Tay: Khái Niệm</div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="notebook-paper p-6 rounded-lg text-slate-800 text-lg pl-16 rotate-1">
+                    <h3 class="font-bold text-xl text-red-600 mb-2 underline decoration-wavy">1. Khái niệm (Trang 25):</h3>
+                    <ul class="list-disc space-y-2">
+                        <li><b>Biểu thức số:</b> Các số được nối với nhau bởi dấu phép tính (+, -, ., :, ^). Ví dụ: <span class="font-mono bg-yellow-100 px-1">2+3</span></li>
+                        <li><b>Biểu thức đại số:</b> Biểu thức gồm các số và <b>các chữ</b> (đại diện cho số) nối với nhau bởi phép tính. Ví dụ: <span class="font-mono bg-yellow-100 px-1">2x+y</span></li>
+                        <li>Trong biểu thức đại số, những chữ đại diện cho một số tùy ý gọi là <b>biến số</b>.</li>
+                    </ul>
+                </div>
+                <div class="flex flex-col justify-center items-center gap-4">
+                    <div class="bg-yellow-50 p-4 rounded-xl text-center">
+                        <i class="fas fa-lightbulb text-4xl text-yellow-400 mb-2"></i>
+                        <p class="text-gray-600">Các em hãy ghi nhớ sự khác biệt giữa hai loại biểu thức nhé!</p>
+                    </div>
+                    <button onclick="unlockSection('section-guide-value')" class="bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-bold px-8 py-3 rounded-full shadow-lg transition transform active:scale-95 animate-bounce">
+                        Sang phần tiếp theo 🚀
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PHẦN 3: HOẠT ĐỘNG HƯỚNG DẪN (MỚI) -->
+        <section id="section-guide-value" class="hidden-section relative bg-white rounded-[2rem] p-8 pt-12 shadow-xl border-4 border-pink-100">
+            <div class="section-header bg-pink-500">🎮 Hoạt Động: Thử Tài Thay Số</div>
+            <div class="flex flex-col items-center gap-6">
+                <p class="text-xl text-gray-700 text-center">
+                    Làm thế nào để tính giá trị của biểu thức <b class="text-pink-600">2x + 1</b> tại <b class="text-pink-600">x = 3</b>?
+                </p>
+                
+                <!-- Hộp biểu thức tương tác -->
+                <div class="bg-slate-800 text-white p-8 rounded-2xl font-mono text-4xl shadow-lg border-4 border-slate-600 w-full max-w-md text-center transition-all duration-500" id="demo-display">
+                    2<span id="demo-var" class="text-pink-400 font-bold border-2 border-dashed border-pink-400 rounded px-1">x</span> + 1
+                </div>
+
+                <!-- Điều khiển -->
+                <div class="flex gap-4" id="demo-controls">
+                    <button onclick="runDemoStep1()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold px-6 py-3 rounded-full shadow-lg transition transform active:scale-95 text-lg">
+                        Bước 1: Thay x = 3
+                    </button>
+                </div>
+                
+                <p id="demo-explanation" class="text-lg text-indigo-600 font-bold h-8"></p>
+
+                <button id="btn-finish-demo" onclick="unlockSection('section-notebook-2')" class="hidden bg-green-500 hover:bg-green-400 text-white font-bold px-8 py-3 rounded-full shadow-lg transition transform active:scale-95 animate-pulse">
+                    Đã hiểu! Mở khóa kiến thức 📝
+                </button>
+            </div>
+        </section>
+
+        <!-- PHẦN 4: SỔ TAY KIẾN THỨC 2 (GIÁ TRỊ) -->
+        <section id="section-notebook-2" class="hidden-section relative bg-white rounded-[2rem] p-8 pt-12 shadow-xl border-4 border-blue-200">
+            <div class="section-header bg-blue-500">📝 Sổ Tay: Giá Trị Biểu Thức</div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="notebook-paper p-6 rounded-lg text-slate-800 text-lg pl-16 rotate-1">
+                    <h3 class="font-bold text-xl text-red-600 mb-2 underline decoration-wavy">2. Giá trị biểu thức (Trang 28):</h3>
+                    <p>Để tính giá trị của một biểu thức đại số tại những giá trị cho trước của các biến, ta làm theo 2 bước:</p>
+                    <ol class="list-decimal pl-5 space-y-1 mt-2 font-bold text-indigo-700">
+                        <li><b>Thay</b> các giá trị đó vào biểu thức.</li>
+                        <li><b>Thực hiện</b> phép tính.</li>
+                    </ol>
+                </div>
+                <div class="flex flex-col justify-center items-center">
+                    <p class="text-xl text-gray-600 mb-4 text-center">Các em đã nắm được quy trình chưa?</p>
+                    <button onclick="unlockSection('section-practice')" class="bg-blue-400 hover:bg-blue-300 text-white font-bold px-8 py-3 rounded-full shadow-lg transition transform active:scale-95 animate-bounce">
+                        Luyện tập ngay ✍️
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- PHẦN 5: THỰC HÀNH 2 & VẬN DỤNG 1 -->
+        <section id="section-practice" class="hidden-section relative bg-white rounded-[2rem] p-8 pt-12 shadow-xl border-4 border-indigo-100">
+            <div class="section-header bg-indigo-500">✍️ Thực Hành 2 & Vận Dụng 1</div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Thực hành 2 -->
+                <div>
+                    <h3 class="text-xl font-bold text-indigo-900 mb-3 bg-indigo-50 px-4 py-2 rounded-lg">Thực Hành 2 (Trang 27):</h3>
+                    <div class="mb-4">
+                        <p class="mb-2">Viết biểu thức đại số biểu thị diện tích của <b>hình thang</b> có đáy lớn là <b>a</b>, đáy nhỏ là <b>b</b>, chiều cao là <b>h</b> ($a, b, h > 0$).</p>
+                        
+                        <div class="flex justify-center mb-4">
+                            <svg width="150" height="80" viewBox="0 0 150 80">
+                                <polygon points="30,10 120,10 140,70 10,70" style="fill:#e0e7ff;stroke:#4338ca;stroke-width:2" />
+                                <text x="70" y="25" fill="#4338ca" font-size="12" font-weight="bold">b</text>
+                                <text x="70" y="78" fill="#4338ca" font-size="12" font-weight="bold">a</text>
+                                <line x1="120" y1="10" x2="120" y2="70" style="stroke:#6b7280;stroke-width:1;stroke-dasharray:4" />
+                                <text x="125" y="45" fill="#6b7280" font-size="12">h</text>
+                            </svg>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="checkOption(this, true, 'th2')" class="quiz-option th2 p-2 border rounded text-center font-mono text-lg font-bold">
+                                (a + b)h<br><span class="border-t border-black w-full block my-1"></span>2
+                            </button>
+                            <button onclick="checkOption(this, false, 'th2')" class="quiz-option th2 p-2 border rounded text-center font-mono text-lg font-bold my-auto">(a + b)h</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vận dụng 1 -->
+                <div class="border-l-2 border-indigo-100 pl-6 md:pl-8">
+                    <h3 class="text-xl font-bold text-indigo-900 mb-3 bg-indigo-50 px-4 py-2 rounded-lg">Vận Dụng 1 (Trang 27):</h3>
+                    <p class="text-gray-700 mb-4">
+                        Khung ảnh hình chữ nhật với hai cạnh liên tiếp bằng <b>3a</b> cm và <b>4a</b> cm với bề rộng bằng <b>2</b> cm.
+                        <br>Viết biểu thức biểu thị <b>diện tích của tấm ảnh</b> (phần màu trắng)?
+                    </p>
+                    
+                    <div class="flex justify-center mb-4">
+                        <div class="frame-diagram relative">
+                            <span class="absolute -top-6 text-xs text-indigo-800 font-bold">3a</span>
+                            <span class="absolute -left-6 top-1/2 -translate-y-1/2 text-xs text-indigo-800 font-bold">4a</span>
+                            <div class="absolute right-2 top-2 text-[10px] text-white font-bold bg-indigo-800 px-1 rounded">2cm</div>
+                            <div class="frame-inner"><span>Ảnh</span></div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="checkOption(this, false, 'vd1')" class="quiz-option vd1 p-2 border rounded text-left px-4 font-mono">A. 3a . 4a</button>
+                        <button onclick="checkOption(this, false, 'vd1')" class="quiz-option vd1 p-2 border rounded text-left px-4 font-mono">B. (3a - 2)(4a - 2)</button>
+                        <button onclick="checkOption(this, true, 'vd1')" class="quiz-option vd1 p-2 border rounded text-left px-4 font-mono">C. (3a - 4)(4a - 4)</button>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2 italic">*Gợi ý: Chiều dài và rộng của ảnh phải trừ đi bề rộng viền ở cả 2 bên (2cm + 2cm).</p>
+                </div>
+            </div>
+            
+            <div class="text-center mt-6">
+                <button onclick="unlockSection('section-calc')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-2 rounded-full shadow-lg transition">Tiếp tục ⬇️</button>
+            </div>
+        </section>
+
+        <!-- PHẦN 6: TỰ TÍNH GIÁ TRỊ (MÁY TÍNH) -->
+        <section id="section-calc" class="hidden-section relative bg-gradient-to-br from-slate-700 to-slate-900 rounded-[2rem] p-8 pt-12 shadow-2xl text-white overflow-hidden">
+            <div class="section-header bg-slate-600">🤖 Máy Tính Giá Trị</div>
+            <div class="grid md:grid-cols-2 gap-12 relative z-10">
+                <!-- Chọn bài tập -->
+                <div class="space-y-6">
+                    <div class="bg-white/10 p-5 rounded-2xl border border-white/20 hover:bg-white/20 transition cursor-pointer" onclick="setupCalculation('th3')">
+                        <h4 class="text-yellow-300 font-bold text-xl mb-2">Thực Hành 3 (SGK Trang 27):</h4>
+                        <p>Tính giá trị của biểu thức <span class="font-mono bg-black/30 px-2 py-1 rounded text-green-400">P = 3x² - 4x</span> tại <b>x = 2</b>.</p>
+                        <p class="text-sm text-gray-400 mt-2">👉 Nhấp để làm bài</p>
+                    </div>
+                    <div class="bg-white/10 p-5 rounded-2xl border border-white/20 hover:bg-white/20 transition cursor-pointer" onclick="setupCalculation('vd2')">
+                        <h4 class="text-pink-300 font-bold text-xl mb-2">Vận Dụng 2 (Trang 28): Giá giày</h4>
+                        <p>Giá bán = C + C.r (với r là thuế VAT).<br>Tính giá đôi giày khi giá gốc <b>C = 600</b> (nghìn đồng), thuế <b>r = 10%</b>.</p>
+                        <p class="text-sm text-gray-400 mt-2">👉 Nhấp để làm bài</p>
+                    </div>
+                    <div class="bg-white/10 p-5 rounded-2xl border-2 border-red-500/50 hover:bg-red-500/20 transition cursor-pointer" onclick="setupCalculation('negative')">
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="text-red-400 font-bold text-xl">🔥 Thử Thách: Số Âm</h4>
+                            <span class="bg-red-500 text-xs px-2 py-1 rounded font-bold text-white">KHÓ</span>
+                        </div>
+                        <p>Tính giá trị của biểu thức <span class="font-mono bg-black/30 px-2 py-1 rounded text-green-400">A = 2x² - 5x</span> tại <b>x = -4</b>.</p>
+                        <p class="text-sm text-gray-400 mt-2">👉 Nhấp để thử sức</p>
+                    </div>
+                </div>
+
+                <!-- Khu vực nhập liệu -->
+                <div class="bg-black/40 p-6 rounded-3xl border-4 border-slate-500 shadow-inner flex flex-col justify-center min-h-[300px]">
+                    <div id="calc-interface" class="hidden">
+                        <h5 id="calc-title" class="text-xl font-bold text-white mb-4 border-b border-slate-600 pb-2"></h5>
+                        <div class="mb-4">
+                            <p id="calc-formula" class="text-slate-400 font-mono text-sm mb-1">Công thức: ...</p>
+                            <p id="calc-substitution" class="text-yellow-400 font-mono text-lg mb-4">Thay số: ...</p>
+                            <label class="block text-sm text-slate-300 mb-1">Nhập kết quả của em:</label>
+                            <input type="number" id="student-answer" class="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white text-xl font-bold focus:outline-none focus:border-green-500 transition placeholder-slate-600" placeholder="VD: 10">
+                        </div>
+                        <button onclick="checkCalculation()" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg transform active:scale-95 transition">KIỂM TRA</button>
+                        <p id="calc-feedback" class="mt-4 text-center font-bold text-lg"></p>
+                    </div>
+                    <div id="calc-placeholder" class="text-center text-slate-500">
+                        <i class="fas fa-arrow-left text-2xl mb-2"></i>
+                        <p>Chọn bài tập bên trái để bắt đầu tính toán</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <div class="text-center text-gray-400 text-sm hand-font pb-8">
+            <p>Học toán thật vui cùng Canvas! ✨</p>
+            <p class="mt-2 text-xl text-blue-600 font-bold animate-bounce">Chúc mừng bạn đã vượt qua phần nhập môn biểu thức đại số! 🎓</p>
+        </div>
+
+    </div>
+
+    <script>
+        // --- LOGIC MỞ KHÓA SECTION ---
+        function unlockSection(id) {
+            const section = document.getElementById(id);
+            section.classList.remove('hidden-section');
+            section.classList.add('active-section');
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // --- LOGIC THỰC HÀNH 1 ---
+        let currentSelection = null;
+        function moveItem(el) {
+            const parent = el.parentElement.id;
+            if (parent === 'drag-container') {
+                if (currentSelection) currentSelection.classList.remove('ring-4', 'ring-blue-400');
+                currentSelection = el;
+                el.classList.add('ring-4', 'ring-blue-400');
+            } else {
+                document.getElementById('drag-container').appendChild(el);
+                el.classList.remove('ring-4', 'ring-blue-400');
+                currentSelection = null;
+            }
+        }
+        ['zone-so', 'zone-dai-so'].forEach(id => {
+            document.getElementById(id).onclick = function() {
+                if(currentSelection) {
+                    this.querySelector('.content').appendChild(currentSelection);
+                    currentSelection.classList.remove('ring-4', 'ring-blue-400');
+                    currentSelection = null;
+                }
+            }
+        });
+        function checkPractice1() {
+            const zoneSo = document.getElementById('zone-so').querySelectorAll('.expression-tag');
+            const zoneDaiSo = document.getElementById('zone-dai-so').querySelectorAll('.expression-tag');
+            let correct = 0, total = 5;
+            zoneSo.forEach(el => { if(el.dataset.type === 'so') { el.classList.add('bg-green-100', 'border-green-500'); correct++; } else el.classList.add('bg-red-100', 'border-red-500'); });
+            zoneDaiSo.forEach(el => { if(el.dataset.type === 'dai-so') { el.classList.add('bg-green-100', 'border-green-500'); correct++; } else el.classList.add('bg-red-100', 'border-red-500'); });
+            const resultText = document.getElementById('p1-result');
+            if (correct === total) {
+                resultText.innerText = "Chính xác! Sổ tay kiến thức đã mở! 🎉";
+                resultText.className = "mt-2 font-bold text-lg text-green-600";
+                unlockSection('section-notebook-1');
+            } else {
+                resultText.innerText = `Bạn làm đúng ${correct}/${total}. Hãy thử lại nhé!`;
+                resultText.className = "mt-2 font-bold text-lg text-orange-600";
+            }
+        }
+
+        // --- LOGIC HƯỚNG DẪN THAY SỐ (DEMO) ---
+        function runDemoStep1() {
+            const displayVar = document.getElementById('demo-var');
+            const controls = document.getElementById('demo-controls');
+            const explain = document.getElementById('demo-explanation');
+            
+            // Animation
+            displayVar.classList.add('bg-white', 'text-slate-900', 'px-2', 'rounded');
+            
+            setTimeout(() => {
+                displayVar.innerText = "(3)"; // Thay x bằng 3
+                explain.innerText = "Bước 1: Ta thay chữ x bằng số 3";
+                
+                // Đổi nút sang bước 2
+                controls.innerHTML = `
+                    <button onclick="runDemoStep2()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-6 py-3 rounded-full shadow-lg transition transform active:scale-95 text-lg">
+                        Bước 2: Tính toán
+                    </button>
+                `;
+            }, 500);
+        }
+
+        function runDemoStep2() {
+            const display = document.getElementById('demo-display');
+            const controls = document.getElementById('demo-controls');
+            const explain = document.getElementById('demo-explanation');
+            
+            display.innerHTML = "6 + 1";
+            explain.innerText = "Bước 2: Thực hiện phép nhân 2 . 3 = 6";
+            
+            setTimeout(() => {
+                display.innerHTML = "<span class='text-green-400 font-bold scale-125 inline-block'>7</span>";
+                explain.innerText = "Cuối cùng: 6 + 1 = 7. Vậy giá trị là 7.";
+                controls.innerHTML = ""; // Xóa nút
+                document.getElementById('btn-finish-demo').classList.remove('hidden');
+            }, 1500);
+        }
+
+        // --- LOGIC TRẮC NGHIỆM ---
+        function checkOption(el, isCorrect, group) {
+            const options = document.querySelectorAll(`.quiz-option.${group}`);
+            options.forEach(opt => opt.classList.remove('bg-green-100', 'border-green-500', 'bg-red-100', 'border-red-500', 'text-green-700', 'text-red-700'));
+            if (isCorrect) el.classList.add('bg-green-100', 'border-green-500', 'text-green-700');
+            else el.classList.add('bg-red-100', 'border-red-500', 'text-red-700');
+        }
+
+        // --- LOGIC TỰ TÍNH ---
+        let activeCalc = null;
+        function setupCalculation(type) {
+            document.getElementById('calc-placeholder').classList.add('hidden');
+            document.getElementById('calc-interface').classList.remove('hidden');
+            const title = document.getElementById('calc-title');
+            const formula = document.getElementById('calc-formula');
+            const sub = document.getElementById('calc-substitution');
+            const input = document.getElementById('student-answer');
+            const feedback = document.getElementById('calc-feedback');
+            
+            input.value = '';
+            feedback.innerText = '';
+            activeCalc = type;
+
+            if (type === 'th3') {
+                title.innerText = "Thực Hành 3: Tính giá trị P";
+                formula.innerText = "Biểu thức: P = 3x² - 4x";
+                sub.innerHTML = "Thay x = 2: P = 3.(2)² - 4.(2) = ?";
+                sub.className = "text-yellow-400 font-mono text-lg mb-4 block"; 
+            } else if (type === 'vd2') {
+                title.innerText = "Vận Dụng 2: Tính giá giày";
+                formula.innerText = "Biểu thức: T = C + C.r";
+                sub.innerHTML = "Thay C=600, r=10% (0.1):<br>T = 600 + 600 . 0.1 = ?";
+                sub.className = "text-yellow-400 font-mono text-lg mb-4 block"; 
+            } else if (type === 'negative') {
+                title.innerText = "Thử Thách: Số Âm";
+                formula.innerText = "Biểu thức: A = 2x² - 5x";
+                sub.innerHTML = "(Hãy tự thay x = -4 vào nháp và tính nhé!)";
+                sub.className = "text-slate-500 italic text-sm mb-4 block"; 
+            }
+        }
+
+        function checkCalculation() {
+            const val = parseFloat(document.getElementById('student-answer').value);
+            const feedback = document.getElementById('calc-feedback');
+            if (isNaN(val)) {
+                feedback.innerText = "Vui lòng nhập số!";
+                feedback.className = "mt-4 text-center font-bold text-lg text-yellow-500";
+                return;
+            }
+            let correctVal = 0;
+            if (activeCalc === 'th3') correctVal = 4; 
+            else if (activeCalc === 'vd2') correctVal = 660; 
+            else if (activeCalc === 'negative') correctVal = 52; 
+
+            if (val === correctVal) {
+                feedback.innerHTML = "Chính xác! Giỏi quá! 🌟";
+                feedback.className = "mt-4 text-center font-bold text-lg text-green-400";
+            } else {
+                feedback.innerHTML = `Chưa đúng. Hãy tính lại nhé!`;
+                feedback.className = "mt-4 text-center font-bold text-lg text-red-400";
+            }
+        }
+    </script>
+
+</body>
+</html>

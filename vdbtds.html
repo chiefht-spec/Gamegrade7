@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game: Chinh Phục Biểu Thức Đại Số (Nâng Cao)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .game-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+        /* Hiệu ứng kính (Glassmorphism) */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 4px solid #ffffff;
+        }
+        /* Thẻ lựa chọn */
+        .option-card {
+            transition: all 0.2s;
+            cursor: pointer;
+            border: 3px solid #e5e7eb;
+        }
+        .option-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border-color: #60a5fa;
+        }
+        .option-card.selected {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+        .option-card.correct {
+            background-color: #dcfce7;
+            border-color: #22c55e;
+        }
+        .option-card.wrong {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .option-card.disabled {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        /* Thanh tiến trình */
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        /* Animation */
+        .avatar-bounce {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(-5%); }
+            50% { transform: translateY(5%); }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 100;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+        /* Input đẹp */
+        .input-game {
+            background: #f3f4f6;
+            border: 3px solid #d1d5db;
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4b5563;
+            outline: none;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .input-game:focus {
+            border-color: #8b5cf6;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.2);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- MÀN HÌNH CHÀO (START SCREEN) -->
+    <div id="start-screen" class="glass-panel p-8 md:p-12 text-center max-w-2xl w-full relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500"></div>
+        
+        <div class="mb-6 avatar-bounce text-8xl">🚀</div>
+        
+        <h1 class="text-4xl md:text-5xl font-bold text-indigo-800 mb-4 tracking-wide">CHINH PHỤC BIỂU THỨC</h1>
+        <p class="text-lg text-gray-600 mb-8 font-medium">Phiên bản Nâng cao: 4 lựa chọn & Thử thách Rút gọn</p>
+        
+        <div class="bg-indigo-50 p-6 rounded-2xl mb-8 border-2 border-indigo-100">
+            <h3 class="text-xl font-bold text-indigo-600 mb-4"><i class="fas fa-user-astronaut mr-2"></i>Thông tin nhà thám hiểm</h3>
+            <div class="space-y-4">
+                <input type="text" id="player-name" class="w-full input-game" placeholder="Nhập tên của em...">
+                <input type="text" id="player-class" class="w-full input-game" placeholder="Lớp (VD: 7A1)...">
+            </div>
+        </div>
+
+        <button onclick="startGame()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg transform transition hover:scale-105 active:scale-95 w-full md:w-auto">
+            BẮT ĐẦU NGAY <i class="fas fa-play-circle ml-2"></i>
+        </button>
+    </div>
+
+    <!-- MÀN HÌNH GAME (GAME SCREEN) -->
+    <div id="game-screen" class="hidden w-full max-w-4xl">
+        <!-- Top Bar -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 text-white gap-4">
+            <!-- Điểm số -->
+            <div class="flex items-center gap-3 bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm order-2 md:order-1">
+                <div class="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-yellow-800 font-bold border-2 border-white">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div>
+                    <p class="text-xs opacity-80">ĐIỂM SỐ</p>
+                    <p class="font-bold text-xl" id="score-display">0</p>
+                </div>
+            </div>
+            
+            <!-- Tiến độ -->
+            <div class="w-full md:w-auto flex-1 mx-4 md:mx-8 order-1 md:order-2">
+                <div class="flex justify-between text-xs font-bold mb-1 opacity-90">
+                    <span>TIẾN ĐỘ</span>
+                    <span id="progress-text">1/6</span>
+                </div>
+                <div class="h-4 bg-black/30 rounded-full overflow-hidden border border-white/20">
+                    <div id="progress-bar" class="h-full bg-gradient-to-r from-green-400 to-emerald-500 progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Thông tin người chơi -->
+            <div class="flex items-center gap-3 bg-black/20 px-4 py-2 rounded-full backdrop-blur-sm order-3">
+                <div class="text-right hidden md:block">
+                    <p class="text-xs opacity-80 font-bold" id="display-name">Người chơi</p>
+                    <p class="font-bold text-sm text-yellow-300" id="set-code">Mã đề: ...</p>
+                </div>
+                <div class="w-10 h-10 bg-white text-indigo-600 rounded-full flex items-center justify-center font-bold text-xl border-2 border-indigo-300">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Khung Câu Hỏi -->
+        <div id="question-container" class="glass-panel p-6 md:p-10 relative min-h-[400px]">
+            <!-- Nội dung câu hỏi sẽ được render tại đây bằng JS -->
+        </div>
+
+        <!-- Nút Điều Hướng -->
+        <div class="mt-6 flex justify-between items-center">
+            <button class="text-white/50 hover:text-white font-bold text-sm px-4 py-2 rounded-lg hover:bg-white/10 transition" onclick="if(confirm('Bạn có muốn thoát game?')) location.reload()">
+                <i class="fas fa-sign-out-alt mr-2"></i> Thoát
+            </button>
+            <button id="next-btn" onclick="nextQuestion()" class="hidden bg-yellow-400 hover:bg-yellow-300 text-yellow-900 font-bold py-3 px-8 rounded-2xl shadow-lg transform transition hover:scale-105 flex items-center">
+                CÂU TIẾP THEO <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MÀN HÌNH KẾT THÚC (RESULT SCREEN) -->
+    <div id="result-screen" class="hidden glass-panel p-8 text-center max-w-2xl w-full">
+        <div class="mb-6 text-yellow-400 text-6xl animate-pulse">
+            <i class="fas fa-trophy"></i>
+        </div>
+        <h2 class="text-4xl font-bold text-indigo-900 mb-2">HOÀN THÀNH XUẤT SẮC!</h2>
+        <p class="text-gray-600 text-lg mb-8">Chúc mừng <span id="end-name" class="font-bold text-indigo-600">...</span> đã về đích.</p>
+
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <div class="bg-indigo-50 p-4 rounded-2xl border-2 border-indigo-100">
+                <p class="text-indigo-400 text-sm font-bold uppercase">Tổng Điểm</p>
+                <p id="final-score" class="text-4xl font-bold text-indigo-700">0</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-2xl border-2 border-green-100">
+                <p class="text-green-400 text-sm font-bold uppercase">Mã Đề</p>
+                <p id="final-code" class="text-2xl font-bold text-green-600">--</p>
+            </div>
+        </div>
+
+        <button onclick="location.reload()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition">
+            <i class="fas fa-redo mr-2"></i> Chơi Lại
+        </button>
+    </div>
+
+    <!-- Thư viện MathJax để hiển thị công thức toán -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script>
+        // --- KHO DỮ LIỆU CÂU HỎI (4 BỘ ĐỀ NÂNG CAO) ---
+        // Mỗi bộ gồm 6 câu. Câu 6 là dạng "Rút gọn rồi tính".
+        const questionSets = [
+            // --- BỘ 1 (Mã 101) ---
+            {
+                code: "101",
+                questions: [
+                    {
+                        type: 'checkbox',
+                        title: "1. Nhận Diện",
+                        desc: "Đâu là <b>Biểu thức Đại số</b>? (Chọn các đáp án đúng)",
+                        options: [
+                            { id: 'A', text: '\\( 23 + 8.2 \\)', isCorrect: false },
+                            { id: 'B', text: '\\( 4x - 2 \\)', isCorrect: true },
+                            { id: 'C', text: '\\( a(b + 3) \\)', isCorrect: true },
+                            { id: 'D', text: '\\( 3^2 - 1 \\)', isCorrect: false }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'input',
+                        title: "2. Tính Giá Trị",
+                        desc: "Tính giá trị của \\( P = 3x^2 - 2x \\) tại \\( x = -2 \\).",
+                        correctValue: 16,
+                        unit: "",
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "3. Hình Hộp Chữ Nhật",
+                        desc: "Kích thước \\( a, b, h \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tính Thể tích \\( V \\):", 
+                                options: [
+                                    {text:"\\( a+b+h \\)", correct:false}, 
+                                    {text:"\\( abh \\)", correct:true},
+                                    {text:"\\( 2(a+b)h \\)", correct:false},
+                                    {text:"\\( 2(ab+bc+ca) \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính \\( V \\) khi \\( a=5, b=3, h=2 \\):", correctValue: 30, type: 'input', unit: "cm³" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "4. Mảnh Vườn",
+                        desc: "Chu vi 60m, chiều rộng \\( x \\) (m).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức chiều dài:", 
+                                options: [
+                                    {text:"\\( 60-x \\)", correct:false}, 
+                                    {text:"\\( 30-x \\)", correct:true},
+                                    {text:"\\( 60-2x \\)", correct:false},
+                                    {text:"\\( \\frac{60}{x} \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính Diện tích khi \\( x=10 \\):", correctValue: 200, type: 'input', unit: "m²" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "5. Mua Sắm",
+                        desc: "5 vở (giá \\( x \\)), 3 bút (giá \\( y \\)).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tổng tiền:", 
+                                options: [
+                                    {text:"\\( 5x+3y \\)", correct:true}, 
+                                    {text:"\\( 3x+5y \\)", correct:false},
+                                    {text:"\\( 5(x+y) \\)", correct:false},
+                                    {text:"\\( 15xy \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Nếu \\( x=10000, y=5000 \\):", correctValue: 65000, type: 'input', unit: "đồng" }
+                        ],
+                        points: 16
+                    },
+                    // CÂU HỎI MỚI: RÚT GỌN RỒI TÍNH
+                    {
+                        type: 'compound',
+                        title: "6. Thử Thách Rút Gọn",
+                        desc: "Cho biểu thức \\( E = 3(x - 2) + 5 \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức rút gọn của E là:", 
+                                options: [
+                                    {text:"\\( 3x - 1 \\)", correct:true}, 
+                                    {text:"\\( 3x + 3 \\)", correct:false},
+                                    {text:"\\( 3x - 6 \\)", correct:false},
+                                    {text:"\\( 3x + 11 \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính giá trị của E tại \\( x = 4 \\):", correctValue: 11, type: 'input', unit: "" }
+                        ],
+                        points: 20
+                    }
+                ]
+            },
+            // --- BỘ 2 (Mã 102) ---
+            {
+                code: "102",
+                questions: [
+                    {
+                        type: 'checkbox',
+                        title: "1. Nhận Diện",
+                        desc: "Đâu là <b>Biểu thức Đại số</b>? (Chọn các đáp án đúng)",
+                        options: [
+                            { id: 'A', text: '\\( 2y + 1 \\)', isCorrect: true },
+                            { id: 'B', text: '\\( 15 : 3 \\)', isCorrect: false },
+                            { id: 'C', text: '\\( 4^2 \\)', isCorrect: false },
+                            { id: 'D', text: '\\( 3(a - 1) \\)', isCorrect: true }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'input',
+                        title: "2. Tính Giá Trị",
+                        desc: "Tính giá trị của \\( A = 2x^2 + 5x \\) tại \\( x = 3 \\).",
+                        correctValue: 33, 
+                        unit: "",
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "3. Hình Hộp Chữ Nhật",
+                        desc: "Kích thước \\( x, y, z \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tính Thể tích:", 
+                                options: [
+                                    {text:"\\( xyz \\)", correct:true}, 
+                                    {text:"\\( x+y+z \\)", correct:false},
+                                    {text:"\\( 2(x+y)z \\)", correct:false},
+                                    {text:"\\( x^2yz \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính \\( V \\) khi \\( x=4, y=2, z=5 \\):", correctValue: 40, type: 'input', unit: "cm³" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "4. Sân Bóng",
+                        desc: "Chu vi 100m, chiều rộng \\( y \\) (m).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức chiều dài:", 
+                                options: [
+                                    {text:"\\( 100-y \\)", correct:false}, 
+                                    {text:"\\( 50-y \\)", correct:true},
+                                    {text:"\\( 100/y \\)", correct:false},
+                                    {text:"\\( 2y+100 \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính Diện tích khi \\( y=20 \\):", correctValue: 600, type: 'input', unit: "m²" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "5. Đi Taxi",
+                        desc: "Giá mở cửa 10.000đ, giá mỗi km là \\( x \\) đồng. Đi 5km.",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tổng tiền:", 
+                                options: [
+                                    {text:"\\( 10000+5x \\)", correct:true}, 
+                                    {text:"\\( 5(10000+x) \\)", correct:false},
+                                    {text:"\\( 50000x \\)", correct:false},
+                                    {text:"\\( 10000x + 5 \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Nếu \\( x=15000 \\):", correctValue: 85000, type: 'input', unit: "đồng" }
+                        ],
+                        points: 16
+                    },
+                    // CÂU HỎI MỚI: RÚT GỌN RỒI TÍNH
+                    {
+                        type: 'compound',
+                        title: "6. Thử Thách Rút Gọn",
+                        desc: "Cho biểu thức \\( F = 2x(x - 3) - 2x^2 \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức rút gọn của F là:", 
+                                options: [
+                                    {text:"\\( -6x \\)", correct:true}, 
+                                    {text:"\\( 6x \\)", correct:false},
+                                    {text:"\\( 4x^2 - 6x \\)", correct:false},
+                                    {text:"\\( -5x \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính giá trị của F tại \\( x = -5 \\):", correctValue: 30, type: 'input', unit: "" }
+                        ],
+                        points: 20
+                    }
+                ]
+            },
+            // --- BỘ 3 (Mã 103) ---
+            {
+                code: "103",
+                questions: [
+                    {
+                        type: 'checkbox',
+                        title: "1. Nhận Diện",
+                        desc: "Đâu là <b>Biểu thức Đại số</b>? (Chọn các đáp án đúng)",
+                        options: [
+                            { id: 'A', text: '\\( 100 : 5 \\)', isCorrect: false },
+                            { id: 'B', text: '\\( 3(x + y) \\)', isCorrect: true },
+                            { id: 'C', text: '\\( m - n \\)', isCorrect: true },
+                            { id: 'D', text: '\\( 2^5 + 1 \\)', isCorrect: false }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'input',
+                        title: "2. Tính Giá Trị",
+                        desc: "Tính giá trị của \\( B = 5x - x^2 \\) tại \\( x = 4 \\).",
+                        correctValue: 4, 
+                        unit: "",
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "3. Hình Lập Phương",
+                        desc: "Cạnh hình lập phương là \\( a \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tính Thể tích:", 
+                                options: [
+                                    {text:"\\( 4a \\)", correct:false}, 
+                                    {text:"\\( a^3 \\)", correct:true},
+                                    {text:"\\( 6a^2 \\)", correct:false},
+                                    {text:"\\( a^2 \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính \\( V \\) khi \\( a=4 \\):", correctValue: 64, type: 'input', unit: "cm³" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "4. Hình Chữ Nhật",
+                        desc: "Chiều rộng \\( x \\), chiều dài hơn chiều rộng 5m.",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức Diện tích:", 
+                                options: [
+                                    {text:"\\( x(x+5) \\)", correct:true}, 
+                                    {text:"\\( 2(x+x+5) \\)", correct:false},
+                                    {text:"\\( x^2+5 \\)", correct:false},
+                                    {text:"\\( x+5 \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính Diện tích khi \\( x=10 \\):", correctValue: 150, type: 'input', unit: "m²" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "5. Tiết Kiệm",
+                        desc: "Có \\( x \\) tờ 50.000đ và \\( y \\) tờ 20.000đ.",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tổng tiền:", 
+                                options: [
+                                    {text:"\\( 50000x + 20000y \\)", correct:true}, 
+                                    {text:"\\( 70000(x+y) \\)", correct:false},
+                                    {text:"\\( 50000y + 20000x \\)", correct:false},
+                                    {text:"\\( 10000(5x+2y) \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Nếu \\( x=2, y=5 \\):", correctValue: 200000, type: 'input', unit: "đồng" }
+                        ],
+                        points: 16
+                    },
+                    // CÂU HỎI MỚI: RÚT GỌN RỒI TÍNH
+                    {
+                        type: 'compound',
+                        title: "6. Thử Thách Rút Gọn",
+                        desc: "Cho biểu thức \\( G = 4a - 2(a - 3) \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức rút gọn của G là:", 
+                                options: [
+                                    {text:"\\( 2a - 6 \\)", correct:false}, 
+                                    {text:"\\( 2a + 6 \\)", correct:true},
+                                    {text:"\\( 2a + 3 \\)", correct:false},
+                                    {text:"\\( 6a - 6 \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính giá trị của G tại \\( a = 2 \\):", correctValue: 10, type: 'input', unit: "" }
+                        ],
+                        points: 20
+                    }
+                ]
+            },
+            // --- BỘ 4 (Mã 104) ---
+            {
+                code: "104",
+                questions: [
+                    {
+                        type: 'checkbox',
+                        title: "1. Nhận Diện",
+                        desc: "Đâu là <b>Biểu thức Đại số</b>? (Chọn các đáp án đúng)",
+                        options: [
+                            { id: 'A', text: '\\( 2\\pi R \\)', isCorrect: true },
+                            { id: 'B', text: '\\( 3^2 + 4^2 \\)', isCorrect: false },
+                            { id: 'C', text: '\\( x - \\frac{1}{2} \\)', isCorrect: true },
+                            { id: 'D', text: '\\( 100 \\cdot 2 \\)', isCorrect: false }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'input',
+                        title: "2. Tính Giá Trị",
+                        desc: "Tính giá trị của \\( C = x^2 - 1 \\) tại \\( x = -3 \\).",
+                        correctValue: 8, 
+                        unit: "",
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "3. Hình Thang",
+                        desc: "Đáy lớn \\( a \\), đáy bé \\( b \\), chiều cao \\( h \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tính Diện tích \\( S \\):", 
+                                options: [
+                                    {text:"\\( (a+b)h \\)", correct:false}, 
+                                    {text:"\\( \\frac{(a+b)h}{2} \\)", correct:true},
+                                    {text:"\\( \\frac{1}{2}abh \\)", correct:false},
+                                    {text:"\\( a+b+h \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính \\( S \\) khi \\( a=5, b=3, h=4 \\):", correctValue: 16, type: 'input', unit: "m²" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "4. Quãng Đường",
+                        desc: "Vận tốc \\( v \\) (km/h), thời gian \\( t \\) (h).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức quãng đường \\( s \\):", 
+                                options: [
+                                    {text:"\\( v+t \\)", correct:false}, 
+                                    {text:"\\( vt \\)", correct:true},
+                                    {text:"\\( v/t \\)", correct:false},
+                                    {text:"\\( t/v \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính \\( s \\) khi \\( v=40, t=2.5 \\):", correctValue: 100, type: 'input', unit: "km" }
+                        ],
+                        points: 16
+                    },
+                    {
+                        type: 'compound',
+                        title: "5. Vé Xem Phim",
+                        desc: "Vé người lớn \\( x \\), vé trẻ em \\( y \\). Mua 2 vé lớn, 3 vé nhỏ.",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức tổng tiền:", 
+                                options: [
+                                    {text:"\\( 2x + 3y \\)", correct:true}, 
+                                    {text:"\\( 3x + 2y \\)", correct:false},
+                                    {text:"\\( 5(x+y) \\)", correct:false},
+                                    {text:"\\( 6xy \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Nếu \\( x=50000, y=30000 \\):", correctValue: 190000, type: 'input', unit: "đồng" }
+                        ],
+                        points: 16
+                    },
+                    // CÂU HỎI MỚI: RÚT GỌN RỒI TÍNH
+                    {
+                        type: 'compound',
+                        title: "6. Thử Thách Rút Gọn",
+                        desc: "Cho biểu thức \\( H = x^2 + 5x - x(x + 2) \\).",
+                        subQuestions: [
+                            { 
+                                q: "a) Biểu thức rút gọn của H là:", 
+                                options: [
+                                    {text:"\\( 3x \\)", correct:true}, 
+                                    {text:"\\( 7x \\)", correct:false},
+                                    {text:"\\( 2x^2 + 3x \\)", correct:false},
+                                    {text:"\\( 3x + 2 \\)", correct:false}
+                                ], 
+                                type: 'radio' 
+                            },
+                            { q: "b) Tính giá trị của H tại \\( x = 10 \\):", correctValue: 30, type: 'input', unit: "" }
+                        ],
+                        points: 20
+                    }
+                ]
+            }
+        ];
+
+        let currentSet = null;
+        let currentQIndex = 0;
+        let score = 0;
+        let playerName = "";
+
+        // --- HÀM KHỞI ĐỘNG GAME ---
+        function startGame() {
+            const name = document.getElementById('player-name').value.trim();
+            const cls = document.getElementById('player-class').value.trim();
+            
+            if(!name) {
+                alert("Bạn ơi, hãy nhập tên để bắt đầu nhé!");
+                return;
+            }
+            
+            // Random chọn 1 trong 4 bộ đề
+            const randomIndex = Math.floor(Math.random() * questionSets.length);
+            currentSet = questionSets[randomIndex];
+            
+            playerName = name;
+            document.getElementById('display-name').innerText = name + (cls ? ` (${cls})` : "");
+            document.getElementById('set-code').innerText = "Mã đề: " + currentSet.code;
+            
+            // Chuyển màn hình
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            
+            renderQuestion();
+        }
+
+        // --- RENDER CÂU HỎI ---
+        function renderQuestion() {
+            const q = currentSet.questions[currentQIndex];
+            const container = document.getElementById('question-container');
+            const nextBtn = document.getElementById('next-btn');
+            
+            // Cập nhật tiến độ
+            document.getElementById('progress-text').innerText = `${currentQIndex + 1}/${currentSet.questions.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQIndex) / currentSet.questions.length) * 100}%`;
+            
+            nextBtn.classList.add('hidden');
+
+            let html = `
+                <div class="mb-6">
+                    <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider mb-2 inline-block">Câu hỏi ${currentQIndex + 1}</span>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">${q.title}</h2>
+                    <p class="text-lg text-gray-600">${q.desc}</p>
+                </div>
+            `;
+
+            // Xử lý các loại câu hỏi
+            if (q.type === 'checkbox') {
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">`;
+                q.options.forEach(opt => {
+                    html += `
+                        <div class="option-card bg-white p-4 rounded-xl border-2 border-gray-200 shadow-sm flex items-center" onclick="toggleCheckbox(this)">
+                            <div class="w-6 h-6 border-2 border-gray-300 rounded flex items-center justify-center mr-3 checkbox-icon transition-colors">
+                                <i class="fas fa-check text-white transform scale-0 transition-transform"></i>
+                            </div>
+                            <span class="text-lg font-bold text-gray-700">${opt.text}</span>
+                            <input type="checkbox" class="hidden" value="${opt.id}">
+                        </div>
+                    `;
+                });
+                html += `</div>
+                <div class="mt-8 text-center">
+                    <button onclick="submitAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition">KIỂM TRA ĐÁP ÁN</button>
+                </div>`;
+            } 
+            else if (q.type === 'input') {
+                html += `
+                    <div class="flex flex-col items-center justify-center py-8">
+                        <div class="flex items-center gap-4 bg-white p-2 pr-6 rounded-2xl shadow-inner border border-gray-200">
+                            <span class="bg-gray-100 px-4 py-2 rounded-xl text-gray-500 font-bold">Kết quả =</span>
+                            <input type="number" id="input-q" class="input-game w-48" placeholder="?">
+                            <span class="text-gray-500 font-bold">${q.unit}</span>
+                        </div>
+                        <div class="mt-8">
+                            <button onclick="submitAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition">KIỂM TRA ĐÁP ÁN</button>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (q.type === 'compound') {
+                html += `<div class="space-y-8">`;
+                q.subQuestions.forEach((sub, idx) => {
+                    html += `<div class="bg-gray-50 p-6 rounded-2xl border border-gray-200" id="sub-q-${idx}">
+                        <p class="font-bold text-gray-800 mb-4 text-lg">${sub.q}</p>`;
+                    
+                    if(sub.type === 'radio') {
+                        // HIỂN THỊ LƯỚI 2 CỘT CHO 4 LỰA CHỌN
+                        html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+                        sub.options.forEach((opt, optIdx) => {
+                            html += `
+                                <div class="option-card bg-white p-3 rounded-xl border-2 border-gray-200 shadow-sm text-center" onclick="selectRadio(this, ${idx})">
+                                    <span class="font-bold text-gray-700">${opt.text}</span>
+                                    <input type="radio" name="sub-${idx}" class="hidden" value="${opt.correct}">
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    } else if (sub.type === 'input') {
+                        html += `
+                            <div class="flex items-center gap-3">
+                                <input type="number" id="sub-input-${idx}" class="input-game w-40" placeholder="...">
+                                <span class="font-bold text-gray-500">${sub.unit}</span>
+                            </div>
+                        `;
+                    }
+                    html += `<div class="feedback-msg mt-2 hidden font-bold"></div></div>`;
+                });
+                html += `</div>
+                <div class="mt-8 text-center">
+                    <button onclick="submitAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-10 rounded-xl shadow-lg transition">KIỂM TRA ĐÁP ÁN</button>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+            // Render công thức toán
+            if(window.MathJax) MathJax.typesetPromise();
+        }
+
+        // --- XỬ LÝ CHỌN ĐÁP ÁN (Checkbox) ---
+        function toggleCheckbox(el) {
+            if(el.classList.contains('cursor-not-allowed')) return;
+            el.classList.toggle('selected');
+            const icon = el.querySelector('.checkbox-icon');
+            const check = el.querySelector('.fa-check');
+            const input = el.querySelector('input');
+            
+            if(el.classList.contains('selected')) {
+                icon.classList.add('bg-blue-500', 'border-blue-500');
+                check.classList.remove('scale-0');
+                input.checked = true;
+            } else {
+                icon.classList.remove('bg-blue-500', 'border-blue-500');
+                check.classList.add('scale-0');
+                input.checked = false;
+            }
+        }
+
+        // --- XỬ LÝ CHỌN ĐÁP ÁN (Radio - Compound) ---
+        function selectRadio(el, groupIdx) {
+            if(el.parentElement.classList.contains('pointer-events-none')) return;
+            
+            // Bỏ chọn các option khác
+            const siblings = el.parentElement.querySelectorAll('.option-card');
+            siblings.forEach(s => {
+                s.classList.remove('selected');
+                s.querySelector('input').checked = false;
+            });
+            
+            // Chọn option hiện tại
+            el.classList.add('selected');
+            el.querySelector('input').checked = true;
+        }
+
+        // --- XỬ LÝ NỘP BÀI ---
+        function submitAnswer() {
+            const q = currentSet.questions[currentQIndex];
+            let isCorrect = false;
+            let earnedPoints = 0;
+
+            // Vô hiệu hóa nút kiểm tra để tránh bấm nhiều lần
+            const submitBtn = document.querySelector('button[onclick="submitAnswer()"]');
+            submitBtn.classList.add('hidden');
+
+            if (q.type === 'checkbox') {
+                const options = document.querySelectorAll('.option-card');
+                let allCorrect = true;
+                
+                options.forEach(opt => {
+                    const val = opt.querySelector('input').value;
+                    const isSelected = opt.classList.contains('selected');
+                    // Find if this option is correct in data
+                    const dataOpt = q.options.find(o => o.id === val);
+                    
+                    if (dataOpt.isCorrect) {
+                        opt.classList.add('correct'); // Show green
+                        if (!isSelected) allCorrect = false;
+                    } else if (isSelected) {
+                        opt.classList.add('wrong'); // Show red if wrongly selected
+                        allCorrect = false;
+                    }
+                    opt.classList.add('cursor-not-allowed'); // Disable clicks
+                });
+                if (allCorrect) isCorrect = true;
+            } 
+            else if (q.type === 'input') {
+                const input = document.getElementById('input-q');
+                const val = parseFloat(input.value);
+                input.disabled = true;
+                
+                if (val === q.correctValue) {
+                    input.classList.add('border-green-500', 'bg-green-50', 'text-green-600');
+                    isCorrect = true;
+                } else {
+                    input.classList.add('border-red-500', 'bg-red-50', 'text-red-600');
+                    // Show correct ans
+                    const hint = document.createElement('p');
+                    hint.innerHTML = `Đáp án đúng: <span class="text-green-600 font-bold">${q.correctValue}</span>`;
+                    hint.className = "mt-2 font-bold text-red-500 animate-pulse";
+                    input.parentElement.parentElement.appendChild(hint);
+                }
+            }
+            else if (q.type === 'compound') {
+                let subCorrectCount = 0;
+                
+                q.subQuestions.forEach((sub, idx) => {
+                    const container = document.getElementById(`sub-q-${idx}`);
+                    const feedback = container.querySelector('.feedback-msg');
+                    feedback.classList.remove('hidden');
+                    
+                    if (sub.type === 'radio') {
+                        const selected = container.querySelector('.option-card.selected input');
+                        const options = container.querySelectorAll('.option-card');
+                        
+                        let subRes = false;
+                        if (selected && selected.value === 'true') subRes = true;
+                        
+                        options.forEach(opt => {
+                            const inp = opt.querySelector('input');
+                            if(inp.value === 'true') opt.classList.add('correct');
+                            else if(opt.classList.contains('selected')) opt.classList.add('wrong');
+                        });
+                        container.querySelector('.grid').classList.add('pointer-events-none');
+                        
+                        if(subRes) subCorrectCount++;
+                    } 
+                    else if (sub.type === 'input') {
+                        const input = document.getElementById(`sub-input-${idx}`);
+                        if (parseFloat(input.value) === sub.correctValue) {
+                            input.classList.add('border-green-500', 'text-green-600');
+                            feedback.innerHTML = '<i class="fas fa-check text-green-500"></i> Chính xác!';
+                            feedback.classList.add('text-green-600');
+                            subCorrectCount++;
+                        } else {
+                            input.classList.add('border-red-500', 'text-red-600');
+                            feedback.innerHTML = `<i class="fas fa-times text-red-500"></i> Sai rồi. Đáp án: ${sub.correctValue}`;
+                            feedback.classList.add('text-red-500');
+                        }
+                        input.disabled = true;
+                    }
+                });
+                
+                if (subCorrectCount === q.subQuestions.length) isCorrect = true;
+                // Tính điểm phần trăm nếu làm đúng từng phần (để điểm nhảy đẹp mắt)
+                earnedPoints = (subCorrectCount / q.subQuestions.length) * q.points;
+            }
+
+            // Cộng điểm
+            if (q.type !== 'compound') {
+                if (isCorrect) earnedPoints = q.points;
+            }
+            
+            animateScore(earnedPoints);
+
+            // Hiện nút Next
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        // --- HIỆU ỨNG TĂNG ĐIỂM ---
+        function animateScore(points) {
+            const display = document.getElementById('score-display');
+            const start = score;
+            const end = score + points;
+            score = end; // Update global
+            
+            // Simple count up animation
+            let current = start;
+            const step = () => {
+                if (current < end) {
+                    current++;
+                    display.innerText = Math.floor(current);
+                    requestAnimationFrame(step);
+                } else {
+                    display.innerText = Math.floor(end);
+                }
+            };
+            if(points > 0) step();
+        }
+
+        // --- CÂU TIẾP THEO ---
+        function nextQuestion() {
+            currentQIndex++;
+            if (currentQIndex < currentSet.questions.length) {
+                renderQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        // --- KẾT THÚC ---
+        function showResult() {
+            document.getElementById('game-screen').classList.add('hidden');
+            const resultScreen = document.getElementById('result-screen');
+            resultScreen.classList.remove('hidden');
+            resultScreen.classList.add('flex', 'flex-col', 'items-center', 'justify-center'); // Center content
+            
+            document.getElementById('end-name').innerText = playerName;
+            document.getElementById('final-score').innerText = Math.floor(score);
+            document.getElementById('final-code').innerText = currentSet.code;
+            
+            // Rank logic
+            const rankEl = document.getElementById('final-rank');
+            if (score === 100) {
+                createConfetti();
+            }
+        }
+
+        function createConfetti() {
+            for(let i=0; i<50; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                conf.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                document.body.appendChild(conf);
+            }
+        }
+
+    </script>
+</body>
+</html>
