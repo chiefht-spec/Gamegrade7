@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám phá Tính chất Tỉ lệ nghịch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+        body { font-family: 'Quicksand', sans-serif; background-color: #f1f5f9; }
+        
+        .cupcake { font-size: 1rem; display: inline-block; margin: 1px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); }
+
+        .step-container {
+            display: none;
+            animation: slideUp 0.6s ease-out forwards;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            line-height: 1;
+            font-weight: 800;
+        }
+        .fraction .top { border-bottom: 3px solid currentColor; padding-bottom: 4px; }
+        .fraction .bottom { padding-top: 4px; }
+        
+        .input-box {
+            text-align: center;
+            border: 2px solid #cbd5e1;
+            border-radius: 0.8rem;
+            font-weight: 800;
+            outline: none;
+            transition: all 0.2s;
+            padding: 10px;
+        }
+        .input-box:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+        .correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; }
+
+        .plate-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+            width: 100%;
+        }
+        .plate {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 1.25rem;
+            padding: 10px;
+            min-height: 80px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: center;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .plate-label {
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #6366f1;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 1.25rem;
+            font-weight: 700;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+
+        .math-style { font-family: 'Times New Roman', serif; font-style: italic; font-weight: bold; }
+        
+        .mini-input {
+            width: 70px;
+            height: 50px;
+            background: white;
+            border: 3px solid #e2e8f0;
+            border-radius: 12px;
+            text-align: center;
+            color: #1e293b;
+            font-weight: 900;
+            font-size: 1.25rem;
+            transition: all 0.2s;
+        }
+        .mini-input:focus { border-color: #fbbf24; outline: none; box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.2); }
+        
+        /* Notebook Style for Conclusion */
+        .notebook-conclusion {
+            background: #fff;
+            border-left: 10px solid #f87171;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            padding: 2.5rem;
+            border-radius: 0.5rem 3rem 3rem 0.5rem;
+        }
+        .notebook-conclusion::after {
+            content: '✏️ GHI CHÉP';
+            position: absolute;
+            top: -15px;
+            right: 30px;
+            background: #f87171;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 900;
+            box-shadow: 0 4px 6px rgba(248, 113, 113, 0.3);
+        }
+
+        .sign-input {
+            width: 50px;
+            height: 50px;
+            border: 3px dashed #cbd5e1;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #6366f1;
+            background: #f8fafc;
+        }
+
+        /* Sticky Note Highlights */
+        .sticky-highlight {
+            background: #fef9c3;
+            padding: 15px 20px;
+            border-radius: 0 0 20px 0;
+            border-left: 5px solid #facc15;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
+            position: relative;
+            transform: rotate(-0.5deg);
+        }
+        .sticky-highlight-rose {
+            background: #fff1f2;
+            padding: 15px 20px;
+            border-radius: 0 0 20px 0;
+            border-left: 5px solid #fb7185;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
+            position: relative;
+            transform: rotate(0.5deg);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto space-y-8">
+        <!-- Header -->
+        <div class="text-center space-y-2 mb-10">
+            <h1 class="text-4xl md:text-5xl font-black text-slate-800 tracking-tight">🧁 Khám phá Tính chất Tỉ lệ nghịch</h1>
+            <p class="text-slate-500 text-lg">Hành trình chia bánh và tìm quy luật bí ẩn</p>
+        </div>
+
+        <!-- Giai đoạn 1 -->
+        <div id="phase1" class="bg-white rounded-[2.5rem] shadow-xl overflow-hidden border border-slate-100">
+            <div class="grid md:grid-cols-2">
+                <div class="p-8 md:p-12 space-y-6">
+                    <div class="space-y-4">
+                        <h2 class="text-3xl font-black text-slate-800 flex items-center gap-3">
+                            <span class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xl">1</span>
+                            Khởi động
+                        </h2>
+                        <p class="text-slate-600 text-lg leading-relaxed">
+                            Mẹ có <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg font-black">60</span> chiếc bánh cupcake thơm ngon.
+                            Mẹ muốn chia đều cho <span class="math-style text-indigo-600">x</span> vị khách. Mỗi khách nhận được <span class="math-style text-indigo-600">y</span> chiếc.
+                        </p>
+                    </div>
+
+                    <div class="bg-slate-50 p-6 rounded-3xl space-y-4 border-2 border-dashed border-slate-200">
+                        <label class="text-slate-700 font-bold block text-center italic">Hãy tính toán trường hợp này:</label>
+                        <div class="flex items-center justify-center gap-4">
+                            <span class="text-lg">Nếu có <b>4</b> khách (x = 4), thì y = </span>
+                            <input type="number" id="init-y" class="input-box w-24 text-2xl" placeholder="?">
+                        </div>
+                    </div>
+
+                    <button onclick="checkInit()" class="btn-primary w-full text-lg uppercase tracking-widest transition-all active:scale-95">Xác nhận & Xem minh họa</button>
+                </div>
+
+                <div class="bg-indigo-600 p-8 flex flex-col items-center justify-center text-center relative">
+                    <div id="plates-p1" class="plate-container">
+                         <div class="text-indigo-200 italic py-20 w-full opacity-50">Hình ảnh chia bánh sẽ hiện ở đây</div>
+                    </div>
+                    <div id="caption-p1" class="mt-6 text-white font-bold hidden bg-black/20 px-6 py-3 rounded-full border border-white/20">
+                        Tổng cộng 60 bánh chia cho 4 người
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Giai đoạn 2: Bảng số liệu và Tính chất -->
+        <div id="phase2" class="step-container space-y-12 pb-12">
+            <div class="flex items-center gap-6">
+                <div class="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg">2</div>
+                <h2 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Quy luật từ những con số</h2>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-10">
+                <!-- Cột trái: Bảng và Visual -->
+                <div class="lg:col-span-5 space-y-8">
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-indigo-50 rounded-bl-full -z-10"></div>
+                        <p class="text-indigo-600 font-black mb-6 text-center uppercase tracking-widest text-sm">Điền bảng số liệu (Tổng 60 bánh)</p>
+                        <table class="w-full text-center border-separate border-spacing-y-3">
+                            <thead>
+                                <tr class="text-slate-400 text-xs font-black uppercase">
+                                    <th class="pb-2">Khách (x)</th>
+                                    <th class="pb-2">Bánh (y)</th>
+                                    <th class="pb-2">Tích (x·y)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="group">
+                                    <td><div class="input-box w-full bg-slate-100 border-none">2</div></td>
+                                    <td><input type="number" id="y1" oninput="updateRow(1)" class="input-box w-full table-input" placeholder="?"></td>
+                                    <td><input type="number" id="xy1" readonly class="input-box w-full bg-slate-50 border-none text-indigo-400"></td>
+                                </tr>
+                                <tr class="group">
+                                    <td><div class="input-box w-full bg-slate-100 border-none">5</div></td>
+                                    <td><input type="number" id="y2" oninput="updateRow(2)" class="input-box w-full table-input" placeholder="?"></td>
+                                    <td><input type="number" id="xy2" readonly class="input-box w-full bg-slate-50 border-none text-indigo-400"></td>
+                                </tr>
+                                <tr class="group">
+                                    <td><div class="input-box w-full bg-slate-100 border-none">10</div></td>
+                                    <td><input type="number" id="y3" oninput="updateRow(3)" class="input-box w-full table-input" placeholder="?"></td>
+                                    <td><input type="number" id="xy3" readonly class="input-box w-full bg-slate-50 border-none text-indigo-400"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-indigo-800 p-8 rounded-[3rem] shadow-2xl border-4 border-indigo-400 min-h-[350px] flex flex-col items-center justify-center">
+                        <p id="visual-title" class="text-center text-indigo-100 font-bold mb-6 italic bg-indigo-900/40 px-4 py-2 rounded-lg">Hoàn thành bảng để xem cách chia bánh</p>
+                        <div id="plates-p2" class="plate-container"></div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Tính chất -->
+                <div class="lg:col-span-7 space-y-8">
+                    <!-- Tính chất 1 -->
+                    <div id="tc1-area" class="bg-white p-8 rounded-[3rem] shadow-xl border-2 border-slate-100 transition-all">
+                        <div class="flex items-center gap-4 mb-6">
+                            <span class="bg-amber-100 text-amber-600 px-4 py-1 rounded-full font-black text-xs uppercase">Tính chất 1</span>
+                            <h3 class="text-xl font-bold text-slate-800">Tích của hai đại lượng tương ứng</h3>
+                        </div>
+                        <div class="flex items-center justify-center gap-4 text-3xl font-black text-slate-700">
+                            <span class="math-style">x₁y₁ = x₂y₂ = x₃y₃ = </span>
+                            <input type="number" id="const-a" class="w-28 h-14 bg-slate-100 border-3 border-slate-200 rounded-2xl text-center outline-none focus:border-indigo-500 focus:bg-white transition-all" placeholder="?">
+                        </div>
+                    </div>
+
+                    <!-- Tính chất 2 -->
+                    <div id="tc2-area" class="opacity-30 pointer-events-none transition-all duration-700 bg-white p-8 rounded-[3rem] shadow-xl border-2 border-slate-100">
+                        <div class="flex items-center gap-4 mb-8">
+                            <span class="bg-rose-100 text-rose-600 px-4 py-1 rounded-full font-black text-xs uppercase">Tính chất 2</span>
+                            <h3 class="text-xl font-bold text-slate-800">So sánh các tỉ số</h3>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row items-center justify-around gap-6">
+                            <!-- Tỉ số X -->
+                            <div class="bg-indigo-50 p-6 rounded-[2rem] border-2 border-indigo-100 text-center w-full md:w-1/3">
+                                <div class="fraction text-3xl text-indigo-600 mb-2">
+                                    <span class="top">x₁</span>
+                                    <span class="bottom">x₂</span>
+                                </div>
+                                <div class="text-2xl font-black text-slate-700">
+                                    = <span class="math-style">2/5</span>
+                                </div>
+                            </div>
+
+                            <!-- Ô điền dấu -->
+                            <div class="flex flex-col items-center gap-2">
+                                <input type="text" id="tc2-sign" class="sign-input outline-none focus:border-rose-400 focus:bg-white" placeholder="...">
+                            </div>
+
+                            <!-- Tỉ số Y -->
+                            <div class="bg-rose-50 p-6 rounded-[2rem] border-2 border-rose-100 text-center w-full md:w-1/3">
+                                <div class="fraction text-3xl text-rose-600 mb-2">
+                                    <span class="top">y₂</span>
+                                    <span class="bottom">y₁</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <input type="number" id="tc2-y2" class="mini-input mb-1 h-10 w-16" placeholder="?">
+                                    <div class="w-10 h-1 bg-rose-200"></div>
+                                    <input type="number" id="tc2-y1" class="mini-input mt-1 h-10 w-16" placeholder="?">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8">
+                            <button onclick="checkTC2()" class="btn-primary w-full text-lg uppercase">Xác nhận tỉ lệ nghịch</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Giai đoạn 3: Kết luận (Ghi chép) -->
+            <div id="final-summary" class="hidden space-y-8 pt-10">
+                <div class="flex items-center justify-center gap-4">
+                    <div class="h-1 w-20 bg-slate-200"></div>
+                    <span class="text-slate-400 font-bold uppercase tracking-widest">Ghi bài thôi nào!</span>
+                    <div class="h-1 w-20 bg-slate-200"></div>
+                </div>
+
+                <div class="notebook-conclusion bg-white">
+                    <h2 class="text-3xl font-black text-slate-800 mb-8 border-b-4 border-indigo-100 pb-2 inline-block">
+                        🌈 TÍNH CHẤT TỈ LỆ NGHỊCH
+                    </h2>
+                    
+                    <div class="space-y-12 text-lg text-slate-700">
+                        <div class="bg-indigo-50 p-6 rounded-2xl border-l-8 border-indigo-500 shadow-sm mb-10">
+                            <p class="leading-relaxed text-xl">Nếu hai đại lượng <span class="math-style text-indigo-600">y</span> và <span class="math-style text-indigo-600">x</span> tỉ lệ nghịch với nhau với <b>hệ số tỉ lệ <span class="text-rose-600 math-style">a</span></b> thì:</p>
+                        </div>
+                        
+                        <div class="grid lg:grid-cols-2 gap-12">
+                            <!-- TÍNH CHẤT 1 -->
+                            <div class="group relative">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <span class="bg-amber-500 text-white font-black px-5 py-2 rounded-xl shadow-lg transform -rotate-2">TÍNH CHẤT 1</span>
+                                    <span class="font-bold text-amber-600 text-xl">Tích không đổi</span>
+                                </div>
+                                <div class="p-2 bg-white border-2 border-amber-200 rounded-[2.5rem] shadow-xl">
+                                    <!-- Lời phát biểu nổi bật -->
+                                    <div class="sticky-highlight mb-6">
+                                        <p class="text-slate-800 font-bold leading-relaxed">
+                                            Tích của hai giá trị tương ứng của chúng luôn không đổi và <span class="text-amber-600">bằng hệ số tỉ lệ</span>.
+                                        </p>
+                                    </div>
+                                    <div class="text-3xl font-black math-style text-center text-amber-700 bg-amber-50 py-8 rounded-3xl mx-4 mb-4">
+                                        x₁y₁ = x₂y₂ = x₃y₃ = ... = <span class="text-rose-600 underline decoration-double">a</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TÍNH CHẤT 2 -->
+                            <div class="group relative">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <span class="bg-rose-500 text-white font-black px-5 py-2 rounded-xl shadow-lg transform rotate-2">TÍNH CHẤT 2</span>
+                                    <span class="font-bold text-rose-600 text-xl">Tỉ số nghịch đảo</span>
+                                </div>
+                                <div class="p-2 bg-white border-2 border-rose-200 rounded-[2.5rem] shadow-xl">
+                                    <!-- Lời phát biểu nổi bật -->
+                                    <div class="sticky-highlight-rose mb-6">
+                                        <p class="text-slate-800 font-bold leading-relaxed">
+                                            Tỉ số hai giá trị bất kì của đại lượng này bằng <span class="text-rose-600">nghịch đảo của tỉ số</span> hai giá trị tương ứng của đại lượng kia.
+                                        </p>
+                                    </div>
+                                    <div class="flex items-center justify-center gap-6 text-3xl font-black math-style text-rose-700 bg-rose-50 py-6 rounded-3xl mx-4 mb-4">
+                                        <div class="fraction">
+                                            <span class="top">x₁</span>
+                                            <span class="bottom">x₂</span>
+                                        </div>
+                                        <span class="text-slate-400">=</span>
+                                        <div class="fraction">
+                                            <span class="top">y₂</span>
+                                            <span class="bottom">y₁</span>
+                                        </div>
+                                        <span class="text-slate-200 mx-2 text-xl font-normal">|</span>
+                                        <div class="fraction">
+                                            <span class="top">x₁</span>
+                                            <span class="bottom">x₃</span>
+                                        </div>
+                                        <span class="text-slate-400">=</span>
+                                        <div class="fraction">
+                                            <span class="top">y₃</span>
+                                            <span class="bottom">y₁</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center py-10">
+                    <button onclick="window.location.reload()" class="text-slate-400 font-bold hover:text-indigo-600 transition-colors underline underline-offset-8 decoration-2">Làm lại hành trình khám phá</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TOTAL = 60;
+
+        function renderPlates(containerId, x, y) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            for(let i = 1; i <= x; i++) {
+                const plate = document.createElement('div');
+                plate.className = 'plate animate-pulse';
+                const label = document.createElement('span');
+                label.className = 'plate-label';
+                label.innerText = `Khách ${i}`;
+                plate.appendChild(label);
+                const showCount = Math.min(y, 15);
+                for(let j = 0; j < showCount; j++) {
+                    const c = document.createElement('span');
+                    c.className = 'cupcake';
+                    c.innerText = '🧁';
+                    plate.appendChild(c);
+                }
+                if (y > 15) {
+                    const more = document.createElement('span');
+                    more.className = 'text-[10px] text-slate-400 font-black ml-1 self-end mb-1';
+                    more.innerText = `+${y-15}`;
+                    plate.appendChild(more);
+                }
+                container.appendChild(plate);
+            }
+        }
+
+        function checkInit() {
+            const yInput = document.getElementById('init-y');
+            const y = parseInt(yInput.value);
+            if (y === 15) {
+                yInput.classList.add('correct');
+                document.getElementById('caption-p1').classList.remove('hidden');
+                renderPlates('plates-p1', 4, 15);
+                const p2 = document.getElementById('phase2');
+                p2.style.display = 'block';
+                setTimeout(() => p2.scrollIntoView({behavior:'smooth'}), 400);
+            }
+        }
+
+        function updateRow(rowId) {
+            const xValues = {1: 2, 2: 5, 3: 10};
+            const x = xValues[rowId];
+            const yInput = document.getElementById('y' + rowId);
+            const y = parseInt(yInput.value);
+
+            if (y === (TOTAL / x)) {
+                yInput.classList.add('correct');
+                document.getElementById('xy' + rowId).value = TOTAL;
+                document.getElementById('visual-title').innerText = `Hiện tại: ${x} khách, mỗi khách ${y} bánh.`;
+                renderPlates('plates-p2', x, y);
+            }
+            checkAllRows();
+        }
+
+        function checkAllRows() {
+            const y1 = parseInt(document.getElementById('y1').value);
+            const y2 = parseInt(document.getElementById('y2').value);
+            const y3 = parseInt(document.getElementById('y3').value);
+            const aInput = document.getElementById('const-a');
+
+            if (y1 === 30 && y2 === 12 && y3 === 6) {
+                aInput.addEventListener('input', function() {
+                    if (this.value == 60) {
+                        this.classList.add('correct');
+                        const tc2 = document.getElementById('tc2-area');
+                        tc2.style.opacity = "1";
+                        tc2.style.pointerEvents = "auto";
+                    }
+                });
+            }
+        }
+
+        function checkTC2() {
+            const y2 = parseInt(document.getElementById('tc2-y2').value);
+            const y1 = parseInt(document.getElementById('tc2-y1').value);
+            const sign = document.getElementById('tc2-sign').value.trim();
+            
+            if (y2 === 12 && y1 === 30 && sign === "=") {
+                document.getElementById('tc2-y2').classList.add('correct');
+                document.getElementById('tc2-y1').classList.add('correct');
+                document.getElementById('tc2-sign').classList.add('correct');
+                document.getElementById('tc2-sign').style.borderStyle = "solid";
+                
+                const final = document.getElementById('final-summary');
+                final.classList.remove('hidden');
+                setTimeout(() => final.scrollIntoView({behavior:'smooth'}), 400);
+            }
+        }
+    </script>
+</body>
+</html>

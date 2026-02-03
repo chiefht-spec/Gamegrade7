@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hành trình Đi tìm Hằng số bí ẩn</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #f0f4f8;
+        }
+
+        .bean {
+            width: 18px;
+            height: 18px;
+            background-color: #fcd34d;
+            border-radius: 50% 40% 60% 30%;
+            display: inline-block;
+            margin: 2px;
+            border: 1px solid #b45309;
+            box-shadow: 1px 1px 0px rgba(0,0,0,0.1);
+        }
+
+        .bag {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M20,30 Q50,0 80,30 L85,90 Q50,100 15,90 Z" fill="%23d9b99b" stroke="%238b4513" stroke-width="2"/></svg>');
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+        }
+
+        /* Improved Grid Container */
+        .grid-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f1f5f9;
+            border-radius: 1rem;
+            padding: 20px;
+            min-height: 250px;
+        }
+
+        .grid-container {
+            display: grid;
+            /* Based on area 36, max width 12 or 18 is good */
+            grid-template-columns: repeat(12, 15px);
+            grid-template-rows: repeat(12, 15px);
+            gap: 2px;
+            background-color: #e2e8f0;
+            border: 3px solid #94a3b8;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .grid-cell { width: 15px; height: 15px; background-color: white; border-radius: 2px; transition: all 0.3s; }
+        .active-cell { background-color: #10b981; transform: scale(1.05); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .correct-input { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; font-weight: bold; }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            vertical-align: middle;
+            text-align: center;
+            line-height: 1.1;
+            font-weight: 800;
+        }
+        .fraction .top { border-bottom: 3px solid currentColor; padding-bottom: 2px; }
+        .fraction .bottom { padding-top: 2px; }
+
+        /* Notebook Style */
+        .notebook {
+            background: #fff;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+            border-left: 40px solid #fecaca;
+            position: relative;
+        }
+        .notebook::before {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #f87171;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto bg-white rounded-[3rem] shadow-2xl overflow-hidden border-8 border-indigo-100">
+        <!-- Header -->
+        <div class="bg-indigo-600 p-8 text-white text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                <svg width="100%" height="100%"><pattern id="pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="2" fill="white"/></pattern><rect width="100%" height="100%" fill="url(#pattern)"/></svg>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-black mb-2 uppercase tracking-widest relative z-10">HÀNH TRÌNH ĐI TÌM HẰNG SỐ BÍ ẨN</h1>
+            <p class="text-indigo-100 italic text-lg font-medium">Chinh phục Đại lượng Tỉ lệ nghịch cùng Ba và Mẹ</p>
+        </div>
+
+        <!-- Navigation -->
+        <div class="flex bg-indigo-50 p-3 gap-3">
+            <button onclick="showTab('bean-tab')" id="btn-bean" class="flex-1 py-4 rounded-2xl font-bold transition-all bg-indigo-500 text-white shadow-lg scale-105">1. Túi đậu của Mẹ</button>
+            <button onclick="showTab('rect-tab')" id="btn-rect" class="flex-1 py-4 rounded-2xl font-bold transition-all text-indigo-400 hover:bg-indigo-100">2. Mảnh vườn của Ba</button>
+            <button onclick="showTab('final-tab')" id="btn-final" class="flex-1 py-4 rounded-2xl font-bold transition-all text-indigo-400 hover:bg-indigo-100">3. Sổ tay Toán học</button>
+        </div>
+
+        <!-- TAB 1: CHIA ĐẬU -->
+        <div id="bean-tab" class="tab-content active p-6 md:p-10">
+            <div class="grid md:grid-cols-5 gap-8">
+                <div class="md:col-span-2 space-y-6">
+                    <div class="relative group bg-white p-4 rounded-3xl shadow-sm border-2 border-amber-100">
+                        <div class="flex justify-center mb-4">
+                            <svg width="140" height="140" viewBox="0 0 100 100">
+                                <circle cx="50" cy="35" r="15" fill="#FFDBAC" />
+                                <path d="M50,20 Q60,10 70,25 Q60,20 50,20 Z" fill="#4B2C20" />
+                                <path d="M30,85 Q50,60 70,85 L75,100 L25,100 Z" fill="#F43F5E" />
+                                <rect x="35" y="70" width="30" height="30" fill="#FFF" opacity="0.4" />
+                                <path d="M25,65 Q50,45 75,65" stroke="#334155" stroke-width="2" fill="none" />
+                                <circle cx="45" cy="33" r="1.5" fill="#334155" />
+                                <circle cx="55" cy="33" r="1.5" fill="#334155" />
+                                <path d="M47,42 Q50,45 53,42" stroke="#334155" fill="none" />
+                            </svg>
+                        </div>
+                        <div class="bg-amber-50 p-4 rounded-2xl text-center">
+                            <h3 class="text-xl font-bold text-amber-700">Mẹ nấu chè đậu</h3>
+                            <p class="text-gray-600 text-sm mt-1">Mẹ có <span class="font-black text-amber-600 text-xl">24</span> hạt đậu thần kỳ.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-bold text-gray-400 uppercase text-center">Chọn số túi (x)</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="updateBeans(4)" class="py-3 bg-white border-b-4 border-amber-200 rounded-xl font-black text-amber-600 hover:bg-amber-50 hover:translate-y-1 transition-all">4</button>
+                            <button onclick="updateBeans(6)" class="py-3 bg-white border-b-4 border-amber-200 rounded-xl font-black text-amber-600 hover:bg-amber-50 hover:translate-y-1 transition-all">6</button>
+                            <button onclick="updateBeans(8)" class="py-3 bg-white border-b-4 border-amber-200 rounded-xl font-black text-amber-600 hover:bg-amber-50 hover:translate-y-1 transition-all">8</button>
+                        </div>
+                    </div>
+                    <div id="bean-display" class="grid grid-cols-2 gap-4 p-6 bg-amber-50/50 rounded-[2rem] border-4 border-dashed border-amber-200 min-h-[200px] items-center"></div>
+                </div>
+                <div class="md:col-span-3">
+                    <div class="bg-white p-8 rounded-3xl shadow-inner border-2 border-gray-50 h-full">
+                        <h4 class="font-bold text-gray-400 mb-4 flex items-center gap-2"><span class="w-2 h-2 bg-amber-400 rounded-full"></span> BẢNG QUAN SÁT 1</h4>
+                        <table class="w-full text-center mb-8">
+                            <thead class="text-indigo-400 uppercase text-xs">
+                                <tr>
+                                    <th class="pb-4">Số túi (x)</th>
+                                    <th class="pb-4">Hạt/túi (y)</th>
+                                    <th class="pb-4 bg-amber-50/50 rounded-t-xl">Tích (x · y)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bean-table-body" class="divide-y-8 divide-transparent"></tbody>
+                        </table>
+                        <div id="bean-conclusion" class="hidden p-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl text-white shadow-lg transform scale-105">
+                            <p class="font-bold mb-3 flex items-center gap-2">💡 Con số bí mật của Mẹ:</p>
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl font-black">x · y = </span>
+                                <input type="number" id="bean-a" class="w-24 rounded-xl py-2 text-center text-amber-900 font-black text-2xl outline-none shadow-inner" placeholder="?">
+                                <button onclick="checkBeanA()" class="bg-white text-orange-600 px-6 py-2 rounded-xl font-black hover:bg-orange-50 transition-colors uppercase text-sm">Xác nhận</button>
+                            </div>
+                            <p id="bean-msg" class="mt-3 text-sm font-bold bg-black/10 p-2 rounded-lg text-center hidden"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: DIỆN TÍCH -->
+        <div id="rect-tab" class="tab-content p-6 md:p-10">
+            <div class="grid md:grid-cols-5 gap-8">
+                <div class="md:col-span-2 space-y-6">
+                    <div class="bg-white p-4 rounded-3xl shadow-sm border-2 border-emerald-100">
+                        <div class="flex justify-center mb-4">
+                            <svg width="140" height="140" viewBox="0 0 100 100">
+                                <circle cx="50" cy="35" r="15" fill="#FFDBAC" />
+                                <path d="M35,25 Q50,15 65,25" stroke="#713F12" stroke-width="8" fill="none" />
+                                <path d="M30,85 Q50,60 70,85 L75,100 L25,100 Z" fill="#10B981" />
+                                <path d="M80,60 L90,95 M85,75 L95,75" stroke="#64748B" stroke-width="3" />
+                                <circle cx="45" cy="33" r="1.5" fill="#334155" />
+                                <circle cx="55" cy="33" r="1.5" fill="#334155" />
+                                <path d="M45,42 Q50,45 55,42" stroke="#334155" fill="none" />
+                            </svg>
+                        </div>
+                        <div class="bg-emerald-50 p-4 rounded-2xl text-center">
+                            <h3 class="text-xl font-bold text-emerald-700">Ba quy hoạch vườn</h3>
+                            <p class="text-gray-600 text-sm mt-1">Diện tích cố định: <span class="font-black text-emerald-600 text-xl">36</span> ô đất.</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-sm font-bold text-gray-400 uppercase text-center">Thay đổi chiều ngang (x)</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <button onclick="updateRect(4)" class="py-3 bg-white border-b-4 border-emerald-200 rounded-xl font-black text-emerald-600 hover:bg-emerald-50 transition-all">x = 4</button>
+                            <button onclick="updateRect(6)" class="py-3 bg-white border-b-4 border-emerald-200 rounded-xl font-black text-emerald-600 hover:bg-emerald-50 transition-all">x = 6</button>
+                            <button onclick="updateRect(9)" class="py-3 bg-white border-b-4 border-emerald-200 rounded-xl font-black text-emerald-600 hover:bg-emerald-50 transition-all">x = 9</button>
+                        </div>
+                    </div>
+                    <!-- Centered Grid Visualization -->
+                    <div class="grid-wrapper">
+                        <div id="grid" class="grid-container"></div>
+                    </div>
+                </div>
+                <div class="md:col-span-3">
+                    <div class="bg-white p-8 rounded-3xl shadow-inner border-2 border-gray-50 h-full">
+                        <h4 class="font-bold text-gray-400 mb-4 flex items-center gap-2"><span class="w-2 h-2 bg-emerald-400 rounded-full"></span> BẢNG QUAN SÁT 2</h4>
+                        <table class="w-full text-center mb-8">
+                            <thead class="text-indigo-400 uppercase text-xs">
+                                <tr>
+                                    <th class="pb-4">Chiều ngang (x)</th>
+                                    <th class="pb-4">Chiều dọc (y)</th>
+                                    <th class="pb-4 bg-emerald-50/50 rounded-t-xl">Diện tích (x · y)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rect-table-body" class="divide-y-8 divide-transparent"></tbody>
+                        </table>
+                        <div id="rect-conclusion" class="hidden p-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl text-white shadow-lg">
+                            <p class="font-bold mb-3">💡 Hằng số vườn của Ba:</p>
+                            <div class="flex items-center gap-4">
+                                <span class="text-2xl font-black">x · y = </span>
+                                <input type="number" id="rect-a" class="w-24 rounded-xl py-2 text-center text-emerald-900 font-black text-2xl outline-none shadow-inner" placeholder="?">
+                                <button onclick="checkRectA()" class="bg-white text-teal-600 px-6 py-2 rounded-xl font-black hover:bg-teal-50 transition-colors uppercase text-sm">Kiểm tra</button>
+                            </div>
+                            <p id="rect-msg" class="mt-3 text-sm font-bold bg-black/10 p-2 rounded-lg text-center hidden"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: SỔ TAY SINH ĐỘNG -->
+        <div id="final-tab" class="tab-content p-6 md:p-12 bg-slate-100">
+            <div class="max-w-3xl mx-auto">
+                <div class="notebook p-8 md:p-12 rounded-lg shadow-2xl min-h-[500px]">
+                    <!-- Sticker Decor -->
+                    <div class="absolute -top-4 -right-4 w-24 h-24 bg-yellow-300 rounded-full flex items-center justify-center font-black text-yellow-800 rotate-12 border-4 border-white shadow-lg z-20">LỚP 7</div>
+                    <div class="absolute top-20 -right-8 w-32 h-10 bg-rose-400 text-white flex items-center justify-center font-bold rotate-45 shadow-md">QUAN TRỌNG!</div>
+
+                    <h2 class="text-3xl font-black text-indigo-900 mb-10 border-b-4 border-indigo-200 pb-2 inline-block">📌 Ghi chú bài học</h2>
+                    
+                    <div class="space-y-12">
+                        <section class="relative">
+                            <div class="flex items-start gap-4">
+                                <span class="bg-indigo-500 text-white w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-bold mt-1">1</span>
+                                <div>
+                                    <h3 class="text-xl font-bold text-indigo-800 mb-4">Định nghĩa tỉ lệ nghịch</h3>
+                                    <p class="text-gray-700 text-lg leading-relaxed mb-6">
+                                        Nếu đại lượng <span class="px-2 py-0.5 bg-yellow-100 rounded font-bold">y</span> liên hệ với đại lượng <span class="px-2 py-0.5 bg-yellow-100 rounded font-bold">x</span> theo công thức:
+                                    </p>
+                                    
+                                    <div class="bg-indigo-50 p-8 rounded-3xl border-2 border-indigo-100 flex flex-col md:flex-row items-center justify-center gap-8 shadow-sm">
+                                        <div class="text-4xl font-black text-indigo-700">
+                                            y = 
+                                            <div class="fraction">
+                                                <span class="top">a</span>
+                                                <span class="bottom">x</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-2xl text-gray-300 font-light">hoặc</div>
+                                        <div class="text-4xl font-black text-rose-500 bg-white px-6 py-3 rounded-2xl shadow-sm border border-rose-100">
+                                            x · y = a
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="mt-8 text-lg text-gray-800 bg-indigo-50/50 p-4 rounded-xl border-l-4 border-indigo-400">
+                                        Thì ta nói <span class="font-black text-indigo-600">y tỉ lệ nghịch với x</span> theo hệ số tỉ lệ <span class="text-rose-600 font-black">a</span>.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="grid grid-cols-2 gap-4 opacity-50 italic text-sm text-gray-400 pt-10 border-t border-dashed">
+                            <p>📝 Người viết: Học sinh giỏi Toán</p>
+                            <p class="text-right">Ngày: Hôm nay</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-10 text-center">
+                    <button onclick="showTab('bean-tab')" class="bg-white px-8 py-3 rounded-full text-indigo-600 font-black shadow-md hover:shadow-lg transition-all active:scale-95 border-2 border-indigo-50">← Quay lại ôn tập</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BEAN_TOTAL = 24;
+        const RECT_TOTAL = 36;
+        let beanState = { 4: {}, 6: {}, 8: {} };
+        let rectState = { 4: {}, 6: {}, 9: {} };
+
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            ['bean', 'rect', 'final'].forEach(k => {
+                const b = document.getElementById('btn-'+k);
+                if (tabId.includes(k)) {
+                    b.className = "flex-1 py-4 rounded-2xl font-bold transition-all bg-indigo-500 text-white shadow-lg scale-105";
+                } else {
+                    b.className = "flex-1 py-4 rounded-2xl font-bold transition-all text-indigo-400 hover:bg-indigo-100";
+                }
+            });
+            if(tabId === 'rect-tab') initGrid();
+        }
+
+        // --- Bean Logic ---
+        function updateBeans(x) {
+            const y = BEAN_TOTAL / x;
+            const disp = document.getElementById('bean-display');
+            disp.innerHTML = '';
+            for(let i=0; i<x; i++){
+                let b = document.createElement('div'); b.className = "bag p-1 flex flex-wrap justify-center content-center min-h-[70px] transition-all hover:scale-110";
+                for(let j=0; j<y; j++) b.innerHTML += '<div class="bean"></div>';
+                disp.appendChild(b);
+            }
+            renderTable('bean', [4,6,8], beanState, BEAN_TOTAL);
+        }
+
+        function renderTable(type, keys, state, total) {
+            const tbody = document.getElementById(type + '-table-body');
+            tbody.innerHTML = '';
+            keys.forEach(x => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="py-2"><div class="bg-indigo-50 text-indigo-700 font-black w-10 h-10 flex items-center justify-center rounded-xl mx-auto shadow-sm">${x}</div></td>
+                    <td class="py-2"><input type="number" oninput="val('${type}',${x},'y',this,${total/x})" class="w-16 text-center border-2 border-gray-100 rounded-xl py-2 outline-none transition-all focus:ring-2 focus:ring-indigo-300 ${state[x].yOk ? 'correct-input shadow-md' : ''}" value="${state[x].y || ''}"></td>
+                    <td class="py-2 bg-slate-50/50 rounded-lg"><input type="number" oninput="val('${type}',${x},'xy',this,${total})" class="w-16 text-center border-2 border-gray-100 rounded-xl py-2 outline-none transition-all focus:ring-2 focus:ring-indigo-300 ${state[x].xyOk ? 'correct-input shadow-md' : ''}" value="${state[x].xy || ''}"></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function val(type, x, field, el, target) {
+            const v = parseInt(el.value);
+            const state = type === 'bean' ? beanState : rectState;
+            state[x][field] = v;
+            
+            if(v === target) {
+                state[x][field+'Ok'] = true;
+                el.classList.add('correct-input');
+            } else {
+                state[x][field+'Ok'] = false;
+                el.classList.remove('correct-input');
+            }
+            
+            const allOk = Object.keys(state).every(k => state[k].yOk && state[k].xyOk);
+            if(allOk) {
+                const conc = document.getElementById(type+'-conclusion');
+                conc.classList.remove('hidden');
+                conc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function checkBeanA() {
+            const a = document.getElementById('bean-a').value;
+            const msg = document.getElementById('bean-msg');
+            msg.classList.remove('hidden');
+            if(a == 24) {
+                msg.innerText = "🎉 Tuyệt vời! Bạn đã tìm ra hằng số bí mật a = 24!";
+                msg.className = "mt-3 text-sm font-black bg-white/20 p-2 rounded-lg text-center text-white";
+            } else {
+                msg.innerText = "Chưa đúng rồi, hãy nhìn kỹ cột Tích (x.y) nhé!";
+                msg.className = "mt-3 text-sm font-bold bg-rose-500/30 p-2 rounded-lg text-center text-amber-100";
+            }
+        }
+
+        // --- Rect Logic ---
+        function initGrid() {
+            const g = document.getElementById('grid'); g.innerHTML = '';
+            // 12x12 grid is enough for 36 cells (6x6 or 4x9 or 9x4)
+            for(let i=0; i<12*12; i++) g.innerHTML += '<div class="grid-cell" id="c-'+i+'"></div>';
+            renderTable('rect', [4,6,9], rectState, RECT_TOTAL);
+        }
+
+        function updateRect(x) {
+            const y = RECT_TOTAL / x;
+            document.querySelectorAll('.grid-cell').forEach(c => c.classList.remove('active-cell'));
+            
+            // Calculate starting offset to center the block within the 12x12 grid
+            const startCol = Math.floor((12 - x) / 2);
+            const startRow = Math.floor((12 - y) / 2);
+
+            for(let r=0; r<y; r++) {
+                for(let c=0; c<x; c++) {
+                    const idx = (startRow + r) * 12 + (startCol + c);
+                    const cell = document.getElementById('c-'+idx);
+                    if(cell) cell.classList.add('active-cell');
+                }
+            }
+        }
+
+        function checkRectA() {
+            const a = document.getElementById('rect-a').value;
+            const msg = document.getElementById('rect-msg');
+            msg.classList.remove('hidden');
+            if(a == 36) {
+                msg.innerText = "🎉 Giỏi lắm! 36 chính là hằng số diện tích đấy!";
+                msg.className = "mt-3 text-sm font-black bg-white/20 p-2 rounded-lg text-center text-white";
+            } else {
+                msg.innerText = "Nhìn lại cột x.y xem nào, chúng luôn bằng bao nhiêu?";
+                msg.className = "mt-3 text-sm font-bold bg-rose-500/30 p-2 rounded-lg text-center text-emerald-100";
+            }
+        }
+
+        window.onload = () => { renderTable('bean', [4,6,8], beanState, BEAN_TOTAL); };
+    </script>
+</body>
+</html>

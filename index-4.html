@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thợ Săn Tỉ Lệ Nghịch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Bungee&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; background: #eff6ff; color: #1e293b; touch-action: manipulation; }
+        .font-header { font-family: 'Bungee', cursive; }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        .situation-card { transition: all 0.2s ease-out; cursor: pointer; border: 2px solid transparent; -webkit-tap-highlight-color: transparent; }
+        .situation-card:active { transform: scale(0.98); }
+        .situation-card.selected { background-color: #dbeafe; border-color: #2563eb; box-shadow: 0 0 15px rgba(37, 99, 235, 0.2); }
+        .status-correct { background-color: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; }
+        .status-wrong { background-color: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        .modal-enter { animation: zoomIn 0.3s ease-out forwards; }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="font-header text-4xl md:text-6xl text-blue-600 mb-4 tracking-wide uppercase italic">
+                Thợ Săn Tỉ Lệ Nghịch
+            </h1>
+            
+            <div class="flex flex-col md:flex-row justify-center items-center gap-4">
+                <input type="text" id="team-name" placeholder="Nhập tên nhóm..." class="px-6 py-3 rounded-full border-2 border-blue-200 focus:border-blue-500 outline-none w-full md:w-64 text-center font-bold shadow-sm" />
+                <div class="bg-white px-6 py-3 rounded-full border-2 border-blue-100 shadow-sm flex items-center gap-2">
+                    <span class="text-blue-500">⏱️</span>
+                    <span id="timer-display" class="font-mono font-bold text-xl text-blue-700">0s</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Game Area -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-3xl p-6 card-shadow border border-blue-100">
+                    <h2 class="font-bold text-2xl mb-6 text-slate-700 flex items-center gap-2">
+                        <span>📋</span> Nhiệm vụ: Chọn đại lượng tỉ lệ nghịch
+                    </h2>
+                    <div id="situations-container" class="grid grid-cols-1 gap-3">
+                        <!-- Situations will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Area -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-3xl p-6 card-shadow border border-orange-100 sticky top-6">
+                    <h2 class="font-bold text-2xl mb-6 text-orange-600 flex items-center gap-2">
+                        <span>🏆</span> Bảng Xếp Hạng (Lớp)
+                    </h2>
+                    
+                    <div id="leaderboard-list" class="space-y-3 mb-6 min-h-[100px]">
+                        <p class="text-center text-slate-400 italic py-4">Chưa có kỷ lục nào...</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <button id="btn-check" onclick="checkResult()" class="w-full py-5 bg-blue-600 text-white rounded-3xl font-black text-xl shadow-lg hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                            XÁC NHẬN KẾT QUẢ
+                        </button>
+                        <button id="btn-reset" onclick="resetGame()" class="hidden w-full py-3 bg-slate-200 text-slate-600 rounded-2xl font-bold hover:bg-slate-300 transition-all">
+                            CHƠI LẠI
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kết Quả -->
+    <div id="result-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-[40px] p-8 max-w-sm w-full text-center shadow-2xl border-4 border-blue-500 modal-enter">
+            <div class="text-6xl mb-4">🎊</div>
+            <h3 class="text-3xl font-black text-slate-800 mb-2 italic uppercase">Hoàn Thành!</h3>
+            <p class="text-slate-500 mb-6">Nhóm <span id="modal-team-name" class="font-bold text-blue-600">...</span> đã ghi điểm!</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-blue-50 p-4 rounded-2xl">
+                    <p class="text-xs font-bold text-blue-400 uppercase">Điểm số</p>
+                    <p id="modal-score" class="text-3xl font-black text-blue-700">0</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-2xl">
+                    <p class="text-xs font-bold text-orange-400 uppercase">Thời gian</p>
+                    <p id="modal-time" class="text-3xl font-black text-orange-700">0s</p>
+                </div>
+            </div>
+
+            <button onclick="closeModal()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold text-lg hover:shadow-lg transition-all">
+                XEM THỨ HẠNG
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const situations = [
+            { id: 1, text: "Quãng đường và thời gian đi bộ với cùng một vận tốc", isInverse: false },
+            { id: 2, text: "Số công nhân làm việc và thời gian hoàn thành một công việc (năng suất không đổi)", isInverse: true },
+            { id: 3, text: "Số lượng quyển vở mua được và số tiền phải trả khi giá mỗi quyển cố định", isInverse: false },
+            { id: 4, text: "Tốc độ của xe và thời gian di chuyển trên một quãng đường cố định", isInverse: true },
+            { id: 5, text: "Chiều cao của một người và số tuổi của người đó", isInverse: false },
+            { id: 6, text: "Số vòi nước cùng chảy và thời gian để làm đầy một bể nước cố định", isInverse: true },
+            { id: 7, text: "Diện tích hình chữ nhật và chiều rộng khi giữ nguyên chiều dài", isInverse: false },
+            { id: 8, text: "Số người chia nhau một chiếc bánh và kích thước phần bánh mỗi người nhận được", isInverse: true },
+            { id: 9, text: "Độ dài cạnh của hình vuông và diện tích của nó", isInverse: false },
+            { id: 10, text: "Số học sinh và số trang tài liệu mỗi bạn cần đọc để xong bài tập nhóm cố định", isInverse: true }
+        ];
+
+        let selectedIds = [];
+        let isChecked = false;
+        let startTime = null;
+        let timerInterval = null;
+        let leaderboard = JSON.parse(localStorage.getItem('tile_nghich_leaderboard')) || [];
+
+        function initGame() {
+            renderSituations();
+            updateLeaderboardUI();
+            
+            // Xóa điểm cũ nếu muốn reset hoàn toàn khi tải lại trang (tuỳ chọn)
+            // localStorage.removeItem('tile_nghich_leaderboard');
+        }
+
+        function renderSituations() {
+            const container = document.getElementById('situations-container');
+            container.innerHTML = situations.map(s => {
+                let statusClass = "bg-slate-50 border-transparent hover:border-blue-200";
+                let icon = "";
+                
+                if (isChecked) {
+                    if (s.isInverse && selectedIds.includes(s.id)) {
+                        statusClass = "bg-green-100 border-green-500 text-green-700";
+                        icon = "✅";
+                    } else if (!s.isInverse && selectedIds.includes(s.id)) {
+                        statusClass = "bg-red-100 border-red-500 text-red-700";
+                        icon = "❌";
+                    } else if (s.isInverse) {
+                        statusClass = "border-dashed border-green-300 opacity-70"; // Đáp án đúng nhưng chưa chọn
+                        icon = "👉";
+                    } else {
+                        statusClass = "opacity-50"; // Câu sai và không chọn
+                    }
+                } else if (selectedIds.includes(s.id)) {
+                    statusClass = "bg-blue-100 border-blue-500 ring-2 ring-blue-200";
+                }
+
+                const clickAttr = isChecked ? '' : `onclick="toggleSelect(${s.id})"`;
+                const btnColor = selectedIds.includes(s.id) ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500';
+
+                return `
+                    <div id="card-${s.id}" ${clickAttr} class="situation-card w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 group ${statusClass}">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0 ${btnColor}">
+                            ${s.id}
+                        </div>
+                        <div class="font-semibold flex-grow text-sm md:text-base">${s.text}</div>
+                        <div class="text-xl">${icon}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleSelect(id) {
+            if (isChecked) return;
+            
+            // Bắt đầu tính giờ khi chọn câu đầu tiên
+            if (!startTime && selectedIds.length === 0) {
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 100);
+            }
+
+            const index = selectedIds.indexOf(id);
+            if (index === -1) {
+                selectedIds.push(id);
+            } else {
+                selectedIds.splice(index, 1);
+            }
+            renderSituations();
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            const diff = Math.floor((now - startTime) / 1000);
+            document.getElementById('timer-display').innerText = diff + 's';
+        }
+
+        function checkResult() {
+            const teamName = document.getElementById('team-name').value.trim();
+            if (selectedIds.length === 0) return;
+            if (!teamName) {
+                alert("Vui lòng nhập tên nhóm!");
+                return;
+            }
+
+            clearInterval(timerInterval);
+            isChecked = true;
+            
+            const endTime = Date.now();
+            const duration = Math.floor((endTime - (startTime || endTime)) / 1000);
+
+            // Tính điểm: +20 điểm đúng, -10 điểm sai
+            let correctCount = 0;
+            let wrongSelections = 0;
+            
+            selectedIds.forEach(id => {
+                const s = situations.find(item => item.id === id);
+                if (s.isInverse) correctCount++;
+                else wrongSelections++;
+            });
+
+            const score = Math.max(0, (correctCount * 20) - (wrongSelections * 10));
+
+            // Lưu vào Local Storage
+            const newRecord = {
+                team: teamName,
+                score: score,
+                correct: correctCount,
+                time: duration,
+                timestamp: Date.now()
+            };
+            
+            leaderboard.push(newRecord);
+            // Sắp xếp: Điểm cao trước, Thời gian thấp trước
+            leaderboard.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.time - b.time;
+            });
+            // Giữ top 10
+            leaderboard = leaderboard.slice(0, 10);
+            localStorage.setItem('tile_nghich_leaderboard', JSON.stringify(leaderboard));
+
+            renderSituations();
+            updateLeaderboardUI();
+            showModal(teamName, score, duration);
+            
+            // UI updates
+            document.getElementById('btn-check').classList.add('hidden');
+            document.getElementById('btn-reset').classList.remove('hidden');
+            document.getElementById('team-name').disabled = true;
+        }
+
+        function updateLeaderboardUI() {
+            const list = document.getElementById('leaderboard-list');
+            if (leaderboard.length === 0) {
+                list.innerHTML = '<p class="text-center text-slate-400 italic py-4">Chưa có kỷ lục nào...</p>';
+                return;
+            }
+
+            list.innerHTML = leaderboard.map((entry, index) => {
+                let rankStyle = "bg-slate-50";
+                let rankIcon = index + 1;
+                if (index === 0) { rankStyle = "bg-yellow-50 border border-yellow-200"; rankIcon = "🥇"; }
+                else if (index === 1) { rankIcon = "🥈"; }
+                else if (index === 2) { rankIcon = "🥉"; }
+
+                return `
+                    <div class="flex items-center gap-3 p-3 rounded-xl ${rankStyle}">
+                        <span class="w-6 h-6 flex items-center justify-center font-bold text-lg text-slate-500">${rankIcon}</span>
+                        <div class="flex-grow min-w-0">
+                            <p class="font-bold text-slate-700 truncate">${entry.team}</p>
+                            <p class="text-xs text-slate-500">${entry.correct}/10 câu - ${entry.time}s</p>
+                        </div>
+                        <div class="text-right shrink-0">
+                            <p class="font-black text-blue-600 text-lg">${entry.score}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showModal(team, score, time) {
+            document.getElementById('modal-team-name').innerText = team;
+            document.getElementById('modal-score').innerText = score;
+            document.getElementById('modal-time').innerText = time + 's';
+            document.getElementById('result-modal').classList.remove('hidden');
+            document.getElementById('result-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('result-modal').classList.remove('flex');
+        }
+
+        function resetGame() {
+            selectedIds = [];
+            isChecked = false;
+            startTime = null;
+            document.getElementById('timer-display').innerText = "0s";
+            document.getElementById('team-name').value = "";
+            document.getElementById('team-name').disabled = false;
+            document.getElementById('btn-check').classList.remove('hidden');
+            document.getElementById('btn-reset').classList.add('hidden');
+            renderSituations();
+        }
+
+        // Run
+        initGame();
+    </script>
+</body>
+</html>
