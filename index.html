@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game: Thợ Săn Tỉ Lệ Nghịch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee+Spice&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0;
+            background-image: 
+                linear-gradient(rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.92)),
+                url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5980?q=80&w=2072&auto=format&fit=crop');
+            background-size: cover;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        h1, .game-title { font-family: 'Bungee Spice', cursive; }
+        
+        /* Panel Style */
+        .hunter-panel {
+            background: rgba(30, 41, 59, 0.95);
+            border: 2px solid #334155;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.1); 
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hunter-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+        }
+
+        /* Option Button */
+        .target-btn {
+            background: #1e293b;
+            border: 2px solid #475569;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            color: #cbd5e1;
+        }
+        .target-btn:hover {
+            border-color: #60a5fa;
+            background: #334155;
+            transform: translateX(8px);
+            color: #fff;
+            box-shadow: -4px 0 0 #60a5fa;
+        }
+        .target-btn.correct { 
+            background: #064e3b; 
+            border-color: #34d399; 
+            color: #34d399; 
+            box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+        }
+        .target-btn.wrong { 
+            background: #450a0a; 
+            border-color: #f87171; 
+            color: #f87171;
+            opacity: 0.7; 
+        }
+        .target-btn.disabled { pointer-events: none; opacity: 0.6; }
+
+        /* Input */
+        .hunter-input {
+            background: #020617;
+            border: 2px solid #475569;
+            color: #38bdf8;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        .hunter-input:focus {
+            border-color: #38bdf8;
+            outline: none;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .animate-pop { animation: pop 0.3s ease-out; }
+        @keyframes pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <!-- START SCREEN -->
+    <div id="screen-start" class="hunter-panel p-10 max-w-2xl w-full text-center">
+        <div class="text-7xl mb-6 animate-bounce">🛡️</div>
+        <h1 class="text-5xl md:text-6xl mb-4 tracking-wider text-blue-400 drop-shadow-lg">THỢ SĂN TỈ LỆ</h1>
+        <p class="text-gray-400 mb-8 text-lg font-bold">Chiến dịch: Phân loại 10 Tình Huống Thực Tế</p>
+        
+        <div class="bg-slate-900/80 p-6 rounded-xl mb-8 border border-slate-700">
+            <h3 class="text-blue-400 font-bold mb-4 uppercase tracking-widest text-sm">Xác nhận danh tính</h3>
+            <input type="text" id="player-name" class="hunter-input w-full p-4 text-center text-xl rounded-lg" placeholder="NHẬP TÊN CỦA BẠN...">
+        </div>
+
+        <button onclick="startGame()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg border-b-4 border-blue-800 active:border-b-0 active:mt-1 transition-all uppercase tracking-widest text-xl shadow-lg shadow-blue-900/50">
+            KÍCH HOẠT NHIỆM VỤ
+        </button>
+    </div>
+
+    <!-- GAME SCREEN -->
+    <div id="screen-game" class="hidden w-full max-w-6xl">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-6 bg-slate-900/90 p-4 rounded-xl border border-slate-700 shadow-xl backdrop-blur-sm">
+            <div class="mb-2 md:mb-0">
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Thợ săn</p>
+                <p class="text-blue-400 font-bold text-xl tracking-wide" id="display-name">UNKNOWN</p>
+                <p class="text-[10px] text-slate-600 font-mono" id="mission-code">Mã nhiệm vụ: ...</p>
+            </div>
+            <div class="text-center mb-2 md:mb-0">
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Tình huống</p>
+                <div class="flex items-baseline justify-center">
+                    <span class="text-yellow-400 font-black text-4xl font-mono" id="q-current">1</span>
+                    <span class="text-slate-600 text-xl font-mono">/</span>
+                    <span class="text-slate-600 text-xl font-mono" id="q-total">10</span>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-xs text-slate-500 uppercase font-bold tracking-wider">Điểm thưởng</p>
+                <p class="text-green-400 font-black text-3xl font-mono" id="score">0</p>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-6">
+            <div class="md:col-span-8">
+                <div class="hunter-panel p-8 min-h-[500px] flex flex-col justify-center animate-pop">
+                    <div class="flex justify-between items-start mb-6 border-b border-slate-700/50 pb-4">
+                        <span class="inline-block bg-slate-800 text-blue-300 text-xs font-bold px-3 py-1 rounded border border-slate-600" id="q-tag">LOADING</span>
+                        <div class="flex gap-1">
+                            <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
+                            <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse delay-75"></div>
+                            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse delay-150"></div>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-xl md:text-2xl font-bold mb-8 leading-relaxed text-slate-100 min-h-[80px]" id="q-text">Loading data...</h2>
+                    <div id="options-container" class="grid grid-cols-1 gap-4"></div>
+
+                    <div id="input-container" class="hidden mt-4 bg-slate-800/50 p-6 rounded-xl border border-slate-700">
+                        <label class="text-sm text-yellow-500 font-bold mb-3 block uppercase tracking-wide"><i class="fas fa-keyboard mr-2"></i>Nhập kết quả tính toán:</label>
+                        <div class="flex gap-4">
+                            <input type="number" id="boss-input" class="hunter-input w-full p-4 text-xl rounded-lg" placeholder="...">
+                            <span class="hunter-input flex items-center px-4 rounded-lg text-gray-500 text-sm" id="boss-unit">...</span>
+                        </div>
+                        <button onclick="submitBoss()" class="mt-6 w-full bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-4 rounded-lg uppercase border-b-4 border-yellow-800 active:border-b-0 active:mt-1 transition-all shadow-lg text-lg tracking-widest">
+                            KHAI HỎA 🚀
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-4 space-y-4">
+                <div class="hunter-panel p-5 bg-slate-900 min-h-[500px] flex flex-col">
+                    <h3 class="text-slate-500 text-xs uppercase font-bold mb-3 border-b border-slate-800 pb-2 flex justify-between items-center">
+                        <span><i class="fas fa-terminal mr-2"></i>NHẬT KÝ TÁC CHIẾN</span>
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                    </h3>
+                    <div id="log-box" class="flex-1 text-sm font-mono overflow-y-auto space-y-3 text-slate-400 p-2 scrollbar-thin scrollbar-thumb-slate-700">
+                        <p class="text-blue-400">> Khởi tạo hệ thống...</p>
+                        <p class="text-blue-400">> Đang quét dữ liệu Tình huống...</p>
+                    </div>
+                    
+                    <button id="btn-next" onclick="nextQuestion()" class="hidden mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg border-b-4 border-blue-800 active:border-b-0 active:mt-1 transition-all uppercase tracking-wider text-sm">
+                        MỤC TIÊU TIẾP THEO <i class="fas fa-forward ml-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="screen-result" class="hidden hunter-panel p-12 text-center max-w-2xl w-full mx-auto mt-10">
+        <h2 class="text-5xl font-bold text-yellow-500 mb-4 game-title drop-shadow-md">NHIỆM VỤ HOÀN TẤT</h2>
+        <div class="text-8xl my-8 animate-bounce">🏆</div>
+        <div class="grid grid-cols-2 gap-6 mb-10">
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-600 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-2 opacity-10 text-6xl font-black">S</div>
+                <p class="text-slate-400 text-xs uppercase font-bold mb-1">Tổng điểm tích lũy</p>
+                <p class="text-5xl font-black text-green-400 font-mono" id="final-score">0</p>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-xl border border-slate-600 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-2 opacity-10 text-6xl font-black">R</div>
+                <p class="text-slate-400 text-xs uppercase font-bold mb-1">Cấp bậc đạt được</p>
+                <p class="text-2xl font-bold text-yellow-400 mt-2" id="final-rank">TÂN BINH</p>
+            </div>
+        </div>
+        <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-10 rounded-lg transition w-full uppercase border border-slate-500 tracking-widest hover:shadow-lg">
+            <i class="fas fa-redo mr-2"></i> Chơi lại nhiệm vụ khác
+        </button>
+    </div>
+
+    <script>
+        const questionSets = [
+            {
+                code: "REAL-LIFE",
+                questions: [
+                    { type: "mcq", tag: "TÌNH HUỐNG 1", text: "<b>Số công nhân</b> làm việc và <b>thời gian</b> hoàn thành công việc (với năng suất như nhau).", options: [{text:"Tỉ lệ nghịch", correct:true}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "Người càng đông làm càng nhanh -> Nghịch" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 2", text: "<b>Số lượng</b> gạo mua được và <b>số tiền</b> phải trả (với giá gạo không đổi).", options: [{text:"Tỉ lệ nghịch", correct:false}, {text:"Tỉ lệ thuận", correct:true}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "Mua càng nhiều tốn càng nhiều -> Thuận" },
+                    { type: "mcq", tag: "TÌM HUỐNG 3", text: "<b>Vận tốc</b> và <b>thời gian</b> để đi hết một quãng đường cố định.", options: [{text:"Tỉ lệ nghịch", correct:true}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "Đi càng nhanh thì thời gian càng ít -> Nghịch" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 4", text: "<b>Tuổi của mẹ</b> và <b>tuổi của con</b>.", options: [{text:"Tỉ lệ nghịch", correct:false}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không phải tỉ lệ thuận hay nghịch", correct:true}, {text:"Tỉ lệ kép", correct:false}], log: "Mối quan hệ hiệu số -> Không tỉ lệ" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 5", text: "<b>Chiều dài</b> và <b>chiều rộng</b> của một hình chữ nhật có diện tích không đổi.", options: [{text:"Tỉ lệ nghịch", correct:true}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "S = Dài x Rộng = Hằng số -> Nghịch" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 6", text: "<b>Chu vi</b> và <b>cạnh</b> của một hình vuông.", options: [{text:"Tỉ lệ nghịch", correct:false}, {text:"Tỉ lệ thuận", correct:true}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "Cạnh tăng, Chu vi tăng -> Thuận" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 7", text: "Chia đều một túi kẹo. <b>Số lượng bạn nhỏ</b> và <b>số kẹo mỗi bạn nhận được</b>.", options: [{text:"Tỉ lệ nghịch", correct:true}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "Càng nhiều bạn thì mỗi bạn nhận được càng ít -> Nghịch" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 8", text: "<b>Số trang sách đã đọc</b> và <b>số trang sách còn lại</b>.", options: [{text:"Tỉ lệ nghịch", correct:false}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không phải tỉ lệ thuận hay nghịch", correct:true}, {text:"Tỉ lệ số mũ", correct:false}], log: "Tổng số trang không đổi (Quan hệ Tổng/Hiệu) -> Không tỉ lệ" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 9", text: "<b>Số máy bơm</b> (cùng công suất) và <b>thời gian</b> để bơm đầy bể.", options: [{text:"Tỉ lệ nghịch", correct:true}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "Nhiều máy bơm thì bơm càng nhanh -> Nghịch" },
+                    { type: "mcq", tag: "TÌNH HUỐNG 10", text: "<b>Số vòng quay</b> và <b>chu vi bánh xe</b> khi đi quãng đường cố định.", options: [{text:"Tỉ lệ nghịch", correct:true}, {text:"Tỉ lệ thuận", correct:false}, {text:"Không tỉ lệ", correct:false}, {text:"Không xác định", correct:false}], log: "Bánh xe càng nhỏ thì quay càng nhiều vòng -> Nghịch" }
+                ]
+            }
+        ];
+
+        let currentSet = {};
+        let currentIndex = 0;
+        let score = 0;
+        let playerName = "";
+
+        function startGame() {
+            const name = document.getElementById('player-name').value.trim();
+            if(!name) {
+                addLog("CẢNH BÁO: Chưa nhập tên định danh!", "text-red-500");
+                return;
+            }
+            playerName = name;
+            document.getElementById('display-name').innerText = name;
+            
+            currentSet = questionSets[0];
+            document.getElementById('q-total').innerText = currentSet.questions.length;
+            document.getElementById('mission-code').innerText = "MÃ: " + currentSet.code;
+            
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+            
+            addLog("Đã tải dữ liệu nhiệm vụ " + currentSet.code);
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = currentSet.questions[currentIndex];
+            document.getElementById('q-current').innerText = currentIndex + 1;
+            document.getElementById('q-text').innerHTML = q.text;
+            document.getElementById('q-tag').innerText = q.tag;
+            
+            const optsContainer = document.getElementById('options-container');
+            const inpContainer = document.getElementById('input-container');
+            const nextBtn = document.getElementById('btn-next');
+            const bossUnit = document.getElementById('boss-unit');
+            
+            optsContainer.innerHTML = '';
+            optsContainer.classList.remove('hidden');
+            inpContainer.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+
+            if(q.type === 'mcq') {
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "target-btn p-4 rounded-lg text-left font-bold text-slate-300 w-full text-lg";
+                    btn.innerHTML = `<span class="text-blue-500 mr-4 text-xl font-black">${String.fromCharCode(65+idx)}</span> <span>${opt.text}</span>`;
+                    btn.onclick = () => checkMCQ(btn, opt.correct, q.log);
+                    optsContainer.appendChild(btn);
+                });
+            } else if (q.type === 'boss') {
+                optsContainer.classList.add('hidden');
+                inpContainer.classList.remove('hidden');
+                document.getElementById('boss-input').value = '';
+                bossUnit.innerText = q.unit;
+                document.getElementById('boss-input').focus();
+            }
+        }
+
+        function checkMCQ(btn, isCorrect, logText) {
+            const btns = document.querySelectorAll('.target-btn');
+            btns.forEach(b => b.classList.add('disabled'));
+
+            if(isCorrect) {
+                btn.classList.add('correct');
+                score += 100;
+                addLog("🎯 MỤC TIÊU BỊ HẠ! (+100)", "text-green-400");
+            } else {
+                btn.classList.add('wrong');
+                addLog("❌ TRƯỢT MỤC TIÊU!", "text-red-500");
+            }
+            addLog(">> " + logText, "text-gray-500 italic");
+            updateScore();
+            document.getElementById('btn-next').classList.remove('hidden');
+        }
+
+        function submitBoss() {
+            const q = currentSet.questions[currentIndex];
+            const val = parseFloat(document.getElementById('boss-input').value);
+            const btn = document.querySelector('#input-container button');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            
+            if(val === q.val) {
+                score += 200;
+                addLog("💥 ĐÃ HẠ TRÙM CUỐI! (+200 điểm)", "text-yellow-400 font-bold");
+                btn.innerText = "CHÍNH XÁC!";
+                btn.classList.remove('bg-yellow-600');
+                btn.classList.add('bg-green-700');
+            } else {
+                addLog("💀 BẠN ĐÃ BỊ TRÙM HẠ!", "text-red-500 font-bold");
+                addLog(">> Đáp án đúng: " + q.val, "text-gray-500");
+                btn.innerText = "THẤT BẠI";
+                btn.classList.remove('bg-yellow-600');
+                btn.classList.add('bg-red-800');
+            }
+            addLog(">> " + q.log, "text-gray-500 italic");
+            updateScore();
+            document.getElementById('btn-next').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+            if(currentIndex < currentSet.questions.length) {
+                renderQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-result').classList.remove('hidden');
+            document.getElementById('final-score').innerText = score;
+            const rank = document.getElementById('final-rank');
+            if(score >= 1000) { rank.innerText = "THỢ SĂN HUYỀN THOẠI 🌟"; rank.className = "text-3xl font-bold text-yellow-400 animate-pulse"; }
+            else if(score >= 700) { rank.innerText = "THỢ SĂN TINH NHUỆ 🛡️"; rank.className = "text-3xl font-bold text-green-400"; }
+            else { rank.innerText = "THỢ SĂN TẬP SỰ 🏹"; rank.className = "text-3xl font-bold text-gray-400"; }
+        }
+
+        function updateScore() {
+            document.getElementById('score').innerText = score;
+        }
+
+        function addLog(msg, classes = "text-gray-300") {
+            const box = document.getElementById('log-box');
+            const p = document.createElement('p');
+            p.className = classes;
+            p.innerHTML = msg;
+            box.insertBefore(p, box.firstChild);
+        }
+    </script>
+</body>
+</html>
