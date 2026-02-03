@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thí Nghiệm: Tính Chất 3 Đường Trung Tuyến</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thêm font chữ dễ thương -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; user-select: none; }
+        .data-card { transition: all 0.3s ease; }
+        .data-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        
+        /* Input điền khuyết */
+        .fill-input {
+            border: 2px solid #f9a8d4; /* pink-300 */
+            border-radius: 12px;
+            padding: 8px 12px;
+            color: #831843; /* pink-900 */
+            outline: none;
+            width: 100%;
+            margin-bottom: 8px;
+            font-weight: bold;
+            background-color: #fff1f2;
+        }
+        .fill-input:focus { border-color: #db2777; background-color: #fff; }
+        
+        .cute-btn {
+            background: linear-gradient(to right, #ec4899, #8b5cf6);
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            padding: 8px 16px;
+            transition: transform 0.1s;
+            box-shadow: 0 4px 0 #9d174d;
+        }
+        .cute-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #9d174d;
+        }
+        .cute-btn.disabled {
+            background: #d1d5db;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body class="bg-purple-50 min-h-screen flex flex-col p-4">
+
+    <header class="text-center mb-6">
+        <h1 class="text-4xl font-bold text-purple-900 mb-1">🌟 KHÁM PHÁ TRỌNG TÂM 🌟</h1>
+        <p class="text-purple-600 font-semibold">Kéo các đỉnh A, B, C để cùng làm thám tử toán học nhé!</p>
+    </header>
+
+    <div class="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto w-full flex-1">
+        
+        <!-- Khu vực vẽ -->
+        <div class="flex-1 bg-white rounded-3xl shadow-xl border-4 border-purple-200 relative overflow-hidden h-[600px] lg:h-auto cursor-crosshair">
+            <canvas id="geoCanvas"></canvas>
+            <div class="absolute bottom-4 left-4 bg-white/90 p-3 rounded-xl shadow-lg border-2 border-purple-100 text-sm">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" id="showMedians" checked class="form-checkbox text-purple-600 h-6 w-6 rounded-md border-2 border-purple-300 focus:ring-purple-500">
+                    <span class="font-bold text-purple-800">Hiện 3 đường trung tuyến</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Khu vực số liệu & Sổ tay -->
+        <div class="w-full lg:w-[450px] space-y-6">
+            
+            <!-- Bảng kết quả -->
+            <div class="bg-white p-6 rounded-3xl shadow-lg border-2 border-pink-100">
+                <h3 class="font-bold text-gray-800 mb-4 flex items-center text-lg">
+                    <span class="bg-pink-500 text-white w-8 h-8 rounded-full flex items-center justify-center mr-2 shadow">1</span>
+                    Đo đạc thực tế
+                </h3>
+                
+                <div class="space-y-3">
+                    <div class="flex flex-col p-3 bg-pink-50 rounded-xl data-card border-l-4 border-pink-500">
+                        <span class="text-gray-600 text-sm mb-1 font-semibold">Độ dài AM (Trung tuyến đỉnh A):</span>
+                        <span id="len-am" class="font-bold text-pink-600 text-2xl">0</span>
+                    </div>
+                    <div class="flex flex-col p-3 bg-yellow-50 rounded-xl data-card border-l-4 border-yellow-500">
+                        <span class="text-gray-600 text-sm mb-1 font-semibold">Độ dài AG (Từ đỉnh A đến Giao điểm):</span>
+                        <span id="len-ag" class="font-bold text-yellow-600 text-2xl">0</span>
+                    </div>
+                    
+                    <div class="pt-2 border-t border-dashed border-gray-300">
+                        <div class="flex justify-between items-center p-3 bg-indigo-50 border-2 border-indigo-200 rounded-xl data-card">
+                            <span class="font-bold text-indigo-900">Tỉ số AG / AM:</span>
+                            <button id="btn-calc-ratio" class="cute-btn text-sm bg-gradient-to-r from-indigo-500 to-blue-500 box-shadow-indigo">
+                                Tính ngay 🧮
+                            </button>
+                            <span id="ratio" class="hidden font-bold text-indigo-600 text-2xl animate-pulse">0.666...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sổ tay thám tử (Kết luận) -->
+            <div class="bg-gradient-to-br from-pink-100 to-purple-100 p-6 rounded-3xl shadow-xl border-4 border-white">
+                <h3 class="font-bold mb-4 flex items-center text-purple-900 text-xl">
+                    <span class="text-2xl mr-2">📝</span>
+                    Sổ Tay Toán Học
+                </h3>
+                
+                <div class="space-y-6">
+                    <!-- Tính chất 1 -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-pink-200 relative">
+                        <div class="absolute -top-3 -left-3 bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow">Tính chất 1</div>
+                        <p class="mb-2 text-gray-700 font-medium mt-2">Ba đường trung tuyến của tam giác luôn...</p>
+                        
+                        <div id="input-area-1">
+                            <input type="text" id="input-1" class="fill-input" placeholder="Nhập nhận xét của em...">
+                            <button id="btn-submit-1" class="cute-btn w-full mt-1">Chốt đáp án ✨</button>
+                        </div>
+
+                        <div id="ans-1" class="hidden mt-2 p-3 bg-green-50 rounded-xl border-2 border-green-300 text-center animate-bounce-in">
+                            <p class="font-bold text-green-800 text-sm leading-relaxed">
+                                Ba đường trung tuyến của một tam giác cùng đi qua một điểm. Điểm đó gọi là <span class="text-green-600 font-extrabold uppercase">trọng tâm</span>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Tính chất 2 -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-purple-200 relative">
+                        <div class="absolute -top-3 -left-3 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow">Tính chất 2</div>
+                        <p class="mb-2 text-gray-700 font-medium mt-2">Trọng tâm cách mỗi đỉnh một khoảng bằng bao nhiêu phần độ dài đường trung tuyến?</p>
+                        
+                        <div id="input-area-2">
+                            <!-- Đã xóa gợi ý 2/3 trong placeholder -->
+                            <input type="text" id="input-2" class="fill-input" placeholder="Nhập tỉ số dự đoán...">
+                            <button id="btn-submit-2" class="cute-btn w-full mt-1">Chốt đáp án ✨</button>
+                        </div>
+
+                        <div id="ans-2" class="hidden mt-2 p-3 bg-yellow-50 rounded-xl border-2 border-yellow-300 text-center">
+                            <p class="font-bold text-yellow-800 text-sm mb-3 leading-relaxed">
+                                Trọng tâm cách mỗi đỉnh một khoảng bằng <span class="text-xl text-yellow-600 font-bold bg-white px-2 py-1 rounded shadow-sm">2/3</span> độ dài đường trung tuyến đi qua đỉnh ấy.
+                            </p>
+                            
+                            <!-- Canvas Minh Họa -->
+                            <div class="flex justify-center flex-col items-center">
+                                <canvas id="miniCanvas" width="240" height="130" class="bg-white rounded-lg border border-yellow-200 shadow-sm"></canvas>
+                                <p class="text-[10px] text-gray-500 mt-1 italic">Các đoạn thẳng có cùng số vạch thì bằng nhau</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        {
+            const canvas = document.getElementById('geoCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let ratioRevealed = false;
+
+            // Tọa độ các điểm
+            const A = { x: 0, y: 0, label: 'A', color: '#4f46e5' };
+            const B = { x: 0, y: 0, label: 'B', color: '#4f46e5' };
+            const C = { x: 0, y: 0, label: 'C', color: '#4f46e5' };
+            let dragPoint = null;
+
+            function resize() {
+                // Tăng chiều cao canvas chính để dễ kéo
+                width = canvas.parentElement.clientWidth;
+                height = canvas.parentElement.clientHeight;
+                canvas.width = width * window.devicePixelRatio;
+                canvas.height = height * window.devicePixelRatio;
+                canvas.style.width = width + 'px';
+                canvas.style.height = height + 'px';
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            }
+
+            function initPoints() {
+                A.x = width / 2; A.y = 80;
+                B.x = 100; B.y = height - 100;
+                C.x = width - 100; C.y = height - 100;
+            }
+
+            function dist(p1, p2) {
+                return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2);
+            }
+
+            function getMidpoint(p1, p2) {
+                return { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, width, height);
+                const showMedians = document.getElementById('showMedians').checked;
+
+                // Trung điểm
+                const M = getMidpoint(B, C);
+                const N = getMidpoint(A, C);
+                const P = getMidpoint(A, B);
+
+                // Trọng tâm
+                const G = {
+                    x: (A.x + B.x + C.x) / 3,
+                    y: (A.y + B.y + C.y) / 3
+                };
+
+                // Vẽ trung tuyến với màu sắc rõ ràng (Đỏ - Xanh Dương - Xanh Lá)
+                if (showMedians) {
+                    ctx.lineWidth = 3; // Tăng độ dày nét vẽ
+                    
+                    // AM - Màu Đỏ
+                    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(M.x, M.y);
+                    ctx.strokeStyle = '#ef4444'; // Red-500
+                    ctx.setLineDash([6, 6]); ctx.stroke();
+                    
+                    // BN - Màu Xanh Dương (Blue)
+                    ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(N.x, N.y);
+                    ctx.strokeStyle = '#3b82f6'; // Blue-500
+                    ctx.setLineDash([6, 6]); ctx.stroke();
+
+                    // CP - Màu Xanh Lá (Green)
+                    ctx.beginPath(); ctx.moveTo(C.x, C.y); ctx.lineTo(P.x, P.y);
+                    ctx.strokeStyle = '#22c55e'; // Green-500
+                    ctx.setLineDash([6, 6]); ctx.stroke();
+                    
+                    ctx.setLineDash([]);
+                }
+
+                // Vẽ tam giác
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.lineTo(C.x, C.y); ctx.closePath();
+                ctx.strokeStyle = '#4c1d95'; // Violet-900 (Màu đậm hơn cho viền)
+                ctx.lineWidth = 5; ctx.lineJoin = 'round'; ctx.stroke();
+
+                // Highlight đoạn AG
+                if (showMedians) {
+                    // Tô đậm đoạn AG
+                    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(G.x, G.y);
+                    ctx.strokeStyle = '#b91c1c'; // Red-700
+                    ctx.lineWidth = 5; ctx.stroke();
+                    
+                    // Điểm G
+                    ctx.beginPath(); ctx.arc(G.x, G.y, 8, 0, Math.PI*2);
+                    ctx.fillStyle = '#fbbf24'; ctx.fill(); // Amber
+                    ctx.strokeStyle = '#000'; ctx.lineWidth=2; ctx.stroke();
+                    ctx.fillStyle = '#000'; ctx.font = 'bold 18px Quicksand'; ctx.fillText('G', G.x + 12, G.y);
+                }
+
+                // Vẽ điểm và nhãn
+                drawPoint(A, 'A', 'top'); 
+                drawPoint(B, 'B', 'left'); 
+                drawPoint(C, 'C', 'right');
+                
+                if(showMedians) {
+                    drawPoint(M, 'M', 'bottom');
+                    drawPoint(N, 'N', 'right');
+                    drawPoint(P, 'P', 'left');
+                }
+
+                updateStats(A, M, G);
+            }
+
+            function drawPoint(p, label, pos) {
+                ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI*2);
+                ctx.fillStyle = '#fff'; ctx.fill();
+                ctx.strokeStyle = '#4c1d95'; ctx.lineWidth = 3; ctx.stroke();
+                
+                ctx.fillStyle = '#4c1d95'; ctx.font = 'bold 16px Quicksand';
+                
+                let tx = p.x - 5, ty = p.y - 12;
+                if(pos === 'top') ty -= 5;
+                if(pos === 'bottom') ty += 28;
+                if(pos === 'left') tx -= 15;
+                if(pos === 'right') tx += 15;
+                
+                ctx.fillText(label, tx, ty);
+            }
+
+            function updateStats(A, M, G) {
+                const dAM = dist(A, M);
+                const dAG = dist(A, G);
+                const scale = 0.05;
+                const valAM = (dAM * scale).toFixed(1);
+                const valAG = (dAG * scale).toFixed(1);
+                const ratio = (dAG / dAM); 
+
+                document.getElementById('len-am').innerText = valAM + ' cm';
+                document.getElementById('len-ag').innerText = valAG + ' cm';
+                
+                if (ratioRevealed) {
+                    let ratioText = ratio.toFixed(4);
+                    if (Math.abs(ratio - 2/3) < 0.01) {
+                        ratioText = "≈ 2/3 (" + ratio.toFixed(2) + ")";
+                    }
+                    document.getElementById('ratio').innerText = ratioText;
+                }
+            }
+
+            // --- MINI CANVAS LOGIC (Vẽ hình minh họa chốt tính chất) ---
+            function drawMiniDiagram() {
+                const miniCanvas = document.getElementById('miniCanvas');
+                const mCtx = miniCanvas.getContext('2d');
+                mCtx.clearRect(0,0, 240, 130);
+                
+                // Tọa độ mini (Tam giác thường)
+                const mA = {x: 80, y: 20}; // Đỉnh A lệch trái để thành tam giác thường
+                const mB = {x: 30, y: 110};
+                const mC = {x: 210, y: 110};
+                
+                // Hàm tính trung điểm
+                function getMid(p1, p2) { return {x: (p1.x+p2.x)/2, y: (p1.y+p2.y)/2}; }
+                
+                const mM = getMid(mB, mC); // Trung điểm BC
+                const mN = getMid(mA, mC); // Trung điểm AC
+                const mP = getMid(mA, mB); // Trung điểm AB
+                
+                // Trọng tâm G
+                const mG = {x: (mA.x + mB.x + mC.x)/3, y: (mA.y + mB.y + mC.y)/3};
+
+                // Vẽ 3 trung tuyến mờ hơn chút
+                mCtx.lineWidth = 1.5;
+                
+                // AM (Đỏ nhạt)
+                mCtx.beginPath(); mCtx.moveTo(mA.x, mA.y); mCtx.lineTo(mM.x, mM.y); 
+                mCtx.strokeStyle = '#f87171'; mCtx.stroke(); // Red-400
+                
+                // BN (Xanh nhạt)
+                mCtx.beginPath(); mCtx.moveTo(mB.x, mB.y); mCtx.lineTo(mN.x, mN.y); 
+                mCtx.strokeStyle = '#60a5fa'; mCtx.stroke(); // Blue-400
+                
+                // CP (Lục nhạt)
+                mCtx.beginPath(); mCtx.moveTo(mC.x, mC.y); mCtx.lineTo(mP.x, mP.y); 
+                mCtx.strokeStyle = '#4ade80'; mCtx.stroke(); // Green-400
+
+                // Vẽ tam giác chính (Đậm)
+                mCtx.beginPath(); mCtx.moveTo(mA.x, mA.y); mCtx.lineTo(mB.x, mB.y); mCtx.lineTo(mC.x, mC.y); mCtx.closePath();
+                mCtx.strokeStyle = '#374151'; mCtx.lineWidth = 2; mCtx.stroke();
+
+                // === VẼ VẠCH CHIA TỈ LỆ ===
+                // Hàm vẽ vạch (tick marks)
+                function drawTick(p1, p2, count, color) {
+                    const midX = (p1.x + p2.x)/2;
+                    const midY = (p1.y + p2.y)/2;
+                    // Vector chỉ phương
+                    let dx = p2.x - p1.x;
+                    let dy = p2.y - p1.y;
+                    // Vector pháp tuyến chuẩn hóa
+                    const len = Math.sqrt(dx*dx + dy*dy);
+                    dx /= len; dy /= len;
+                    const nx = -dy; const ny = dx;
+                    
+                    mCtx.beginPath();
+                    mCtx.strokeStyle = color;
+                    mCtx.lineWidth = 2;
+                    const size = 3; // Độ dài vạch
+                    const gap = 3;  // Khoảng cách giữa các vạch
+                    const startOffset = -((count-1)*gap)/2;
+                    
+                    for(let i=0; i<count; i++) {
+                        const off = startOffset + i*gap;
+                        // Dịch chuyển theo pháp tuyến để vẽ vạch vuông góc
+                        mCtx.moveTo(midX - nx*size + dx*off, midY - ny*size + dy*off);
+                        mCtx.lineTo(midX + nx*size + dx*off, midY + ny*size + dy*off);
+                    }
+                    mCtx.stroke();
+                }
+
+                // 1. Chia AM (Đỏ): AG = 2 đoạn, GM = 1 đoạn => Trung điểm K của AG
+                const mK = getMid(mA, mG);
+                // Vẽ 1 vạch đỏ trên AK, KG, GM
+                drawTick(mA, mK, 1, '#dc2626');
+                drawTick(mK, mG, 1, '#dc2626');
+                drawTick(mG, mM, 1, '#dc2626');
+                
+                // Vẽ chấm tròn để thể hiện rõ 2 đoạn AG
+                mCtx.beginPath(); mCtx.arc(mK.x, mK.y, 2, 0, Math.PI*2); mCtx.fillStyle = '#dc2626'; mCtx.fill();
+
+                // 2. Chia BN (Xanh): BG = 2 đoạn, GN = 1 đoạn => Trung điểm L của BG
+                const mL = getMid(mB, mG);
+                // Vẽ 2 vạch xanh trên BL, LG, GN
+                drawTick(mB, mL, 2, '#2563eb');
+                drawTick(mL, mG, 2, '#2563eb');
+                drawTick(mG, mN, 2, '#2563eb');
+                
+                // Vẽ chấm tròn trung điểm BG
+                mCtx.beginPath(); mCtx.arc(mL.x, mL.y, 2, 0, Math.PI*2); mCtx.fillStyle = '#2563eb'; mCtx.fill();
+
+                // 3. Chia CP (Lục): CG = 2 đoạn, GP = 1 đoạn => Trung điểm Q của CG
+                const mQ = getMid(mC, mG);
+                // Vẽ 3 vạch lục trên CQ, QG, GP
+                drawTick(mC, mQ, 3, '#15803d');
+                drawTick(mQ, mG, 3, '#15803d');
+                drawTick(mG, mP, 3, '#15803d');
+                
+                // Vẽ chấm tròn trung điểm CG
+                mCtx.beginPath(); mCtx.arc(mQ.x, mQ.y, 2, 0, Math.PI*2); mCtx.fillStyle = '#15803d'; mCtx.fill();
+
+                // Vẽ điểm G nổi bật
+                mCtx.beginPath(); mCtx.arc(mG.x, mG.y, 3, 0, Math.PI*2);
+                mCtx.fillStyle = '#fbbf24'; mCtx.fill();
+                mCtx.strokeStyle = '#000'; mCtx.lineWidth = 1; mCtx.stroke();
+                
+                // Labels
+                mCtx.fillStyle = '#000'; mCtx.font = 'bold 10px Quicksand';
+                mCtx.fillText("A", mA.x-3, mA.y-5);
+                mCtx.fillText("B", mB.x-10, mB.y+5);
+                mCtx.fillText("C", mC.x+5, mC.y+5);
+                mCtx.fillText("G", mG.x+5, mG.y+3);
+                
+                mCtx.fillText("M", mM.x-3, mM.y+10);
+                mCtx.fillText("N", mN.x+3, mN.y+3);
+                mCtx.fillText("P", mP.x-8, mP.y+3);
+            }
+
+            // Event Listeners
+            document.getElementById('btn-submit-1').addEventListener('click', () => {
+                const input = document.getElementById('input-1').value.trim();
+                if(input) {
+                    document.getElementById('input-area-1').classList.add('hidden');
+                    document.getElementById('ans-1').classList.remove('hidden');
+                } else alert("Em chưa nhập câu trả lời nè!");
+            });
+
+            document.getElementById('btn-submit-2').addEventListener('click', () => {
+                const input = document.getElementById('input-2').value.trim();
+                if(input) {
+                    document.getElementById('input-area-2').classList.add('hidden');
+                    document.getElementById('ans-2').classList.remove('hidden');
+                    drawMiniDiagram(); // Vẽ hình minh họa khi chốt
+                } else alert("Em chưa nhập tỉ số nè!");
+            });
+
+            document.getElementById('btn-calc-ratio').addEventListener('click', () => {
+                ratioRevealed = true;
+                document.getElementById('btn-calc-ratio').classList.add('hidden');
+                document.getElementById('ratio').classList.remove('hidden');
+                draw();
+            });
+
+            // Interaction logic (same as before)
+            function getMousePos(e) {
+                const rect = canvas.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+            canvas.addEventListener('mousedown', (e) => {
+                const pos = getMousePos(e);
+                if (dist(pos, A) < 30) dragPoint = A;
+                else if (dist(pos, B) < 30) dragPoint = B;
+                else if (dist(pos, C) < 30) dragPoint = C;
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (dragPoint) {
+                    const rect = canvas.getBoundingClientRect();
+                    dragPoint.x = e.clientX - rect.left;
+                    dragPoint.y = e.clientY - rect.top;
+                    draw();
+                }
+            });
+            window.addEventListener('mouseup', () => dragPoint = null);
+            document.getElementById('showMedians').addEventListener('change', draw);
+
+            // Init
+            setTimeout(() => {
+                resize();
+                initPoints();
+                draw();
+            }, 100);
+            window.addEventListener('resize', () => { resize(); initPoints(); draw(); });
+        }
+    </script>
+</body>
+</html>
