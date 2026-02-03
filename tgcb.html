@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoạt Động: Tam Giác Cân Bằng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #fdf2f8; /* Pink-50 */
+            background-image: radial-gradient(#fbcfe8 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        h1, h2, .hand-font {
+            font-family: 'Patrick Hand', cursive;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px) rotate(1deg);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .triangle-shape {
+            width: 0;
+            height: 0;
+            border-style: solid;
+            margin: 0 auto;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
+        }
+        /* Custom shapes using clip-path for flexibility */
+        .shape-box {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #f472b6, #db2777);
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="p-6 min-h-screen flex items-center justify-center">
+
+    <div class="max-w-5xl w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden border-8 border-white ring-4 ring-pink-200 relative">
+        
+        <!-- Decoration -->
+        <div class="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
+            <i class="fas fa-shapes text-9xl text-pink-300 transform rotate-12"></i>
+        </div>
+        <div class="absolute bottom-0 left-0 p-4 opacity-20 pointer-events-none">
+            <i class="fas fa-pencil-ruler text-8xl text-blue-300 transform -rotate-12"></i>
+        </div>
+
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-pink-400 to-purple-400 p-8 text-center text-white relative overflow-hidden">
+            <div class="relative z-10">
+                <h3 class="text-xl mb-2 opacity-90 hand-font">Chào các con thân yêu! 👋</h3>
+                <h1 class="text-5xl font-bold mb-2 drop-shadow-md">TAM GIÁC CÂN BẰNG</h1>
+                <p class="text-lg font-medium bg-white/20 inline-block px-4 py-1 rounded-full backdrop-blur-sm">
+                    ✨ Toán học & Giá trị cuộc sống ✨
+                </p>
+            </div>
+            <!-- Circles decoration -->
+            <div class="absolute top-[-50%] left-[-10%] w-64 h-64 bg-white/10 rounded-full"></div>
+            <div class="absolute bottom-[-50%] right-[-10%] w-64 h-64 bg-white/10 rounded-full"></div>
+        </header>
+
+        <div class="p-8 space-y-10">
+
+            <!-- STEP 1: CẮT GIẤY -->
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 text-2xl font-bold shadow-sm">1</div>
+                    <h2 class="text-3xl text-pink-700 font-bold">Xưởng Cắt Giấy ✂️</h2>
+                </div>
+                
+                <p class="text-gray-600 mb-6 text-lg pl-16">Các con hãy chuẩn bị giấy màu và kéo để cắt <b>6 loại tam giác</b> đặc biệt này nhé:</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 pl-4 md:pl-16">
+                    <!-- Tam giác nhọn -->
+                    <div class="card bg-orange-50 border-2 border-orange-100 p-4 rounded-2xl text-center">
+                        <div class="h-24 flex items-center justify-center mb-2">
+                            <!-- Sửa clip-path để tạo tam giác nhọn thường (lệch đỉnh) -->
+                            <div class="shape-box" style="clip-path: polygon(30% 0%, 5% 100%, 95% 100%); background: #fb923c;"></div>
+                        </div>
+                        <p class="font-bold text-orange-700 hand-font text-xl">Nhọn</p>
+                    </div>
+
+                    <!-- Tam giác vuông -->
+                    <div class="card bg-blue-50 border-2 border-blue-100 p-4 rounded-2xl text-center">
+                        <div class="h-24 flex items-center justify-center mb-2">
+                            <div class="shape-box" style="clip-path: polygon(0 0, 0% 100%, 100% 100%); background: #60a5fa;"></div>
+                        </div>
+                        <p class="font-bold text-blue-700 hand-font text-xl">Vuông</p>
+                    </div>
+
+                    <!-- Tam giác tù -->
+                    <div class="card bg-purple-50 border-2 border-purple-100 p-4 rounded-2xl text-center">
+                        <div class="h-24 flex items-center justify-center mb-2">
+                            <!-- Sửa clip-path để tạo góc tù rõ ràng ở đáy -->
+                            <div class="shape-box" style="clip-path: polygon(0% 100%, 65% 100%, 100% 20%); background: #a78bfa; width: 90px;"></div>
+                        </div>
+                        <p class="font-bold text-purple-700 hand-font text-xl">Tù</p>
+                    </div>
+
+                    <!-- Tam giác cân -->
+                    <div class="card bg-green-50 border-2 border-green-100 p-4 rounded-2xl text-center">
+                        <div class="h-24 flex items-center justify-center mb-2">
+                            <div class="shape-box" style="clip-path: polygon(50% 0%, 20% 100%, 80% 100%); background: #4ade80; height: 90px;"></div>
+                        </div>
+                        <p class="font-bold text-green-700 hand-font text-xl">Cân</p>
+                    </div>
+
+                    <!-- Vuông cân -->
+                    <div class="card bg-teal-50 border-2 border-teal-100 p-4 rounded-2xl text-center">
+                        <div class="h-24 flex items-center justify-center mb-2">
+                            <div class="shape-box" style="clip-path: polygon(0 0, 0% 100%, 100% 100%); background: #2dd4bf; width: 70px; height: 70px;"></div>
+                        </div>
+                        <p class="font-bold text-teal-700 hand-font text-xl">Vuông Cân</p>
+                    </div>
+
+                    <!-- Tam giác đều -->
+                    <div class="card bg-rose-50 border-2 border-rose-100 p-4 rounded-2xl text-center">
+                        <div class="h-24 flex items-center justify-center mb-2">
+                            <div class="shape-box" style="clip-path: polygon(50% 0%, 0% 87%, 100% 87%); background: #fb7185;"></div>
+                        </div>
+                        <p class="font-bold text-rose-700 hand-font text-xl">Đều</p>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="border-t-2 border-dashed border-pink-200">
+
+            <!-- STEP 2: HOẠT ĐỘNG VẼ & VIẾT -->
+            <section>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 text-2xl font-bold shadow-sm">2</div>
+                    <h2 class="text-3xl text-purple-700 font-bold">Nghệ Thuật Cân Bằng 🎨</h2>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 pl-4 md:pl-16">
+                    <!-- Nhiệm vụ 1 -->
+                    <div class="bg-indigo-50 p-6 rounded-3xl border-2 border-indigo-100 relative group">
+                        <div class="absolute -top-3 -right-3 bg-indigo-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg">A</div>
+                        <h3 class="text-xl font-bold text-indigo-800 mb-3 flex items-center">
+                            <i class="fas fa-drafting-compass mr-2"></i> Vẽ Hình
+                        </h3>
+                        <p class="text-gray-700 mb-4">Với mỗi tam giác, con hãy dùng thước và bút để vẽ thật chính xác <b>3 đường trung tuyến</b>.</p>
+                        <div class="bg-white p-3 rounded-xl border border-indigo-100 text-center">
+                            <span class="text-xs text-indigo-400 font-bold uppercase tracking-wider">Mẹo nhỏ</span>
+                            <p class="text-indigo-600 hand-font text-lg">"3 đường này phải gặp nhau tại 1 điểm nhé!"</p>
+                        </div>
+                    </div>
+
+                    <!-- Nhiệm vụ 2 -->
+                    <div class="bg-yellow-50 p-6 rounded-3xl border-2 border-yellow-100 relative group">
+                        <div class="absolute -top-3 -right-3 bg-yellow-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold shadow-lg">B</div>
+                        <h3 class="text-xl font-bold text-yellow-800 mb-3 flex items-center">
+                            <i class="fas fa-pen-fancy mr-2"></i> Gửi Gắm Thông Điệp
+                        </h3>
+                        <p class="text-gray-700 mb-2">Trên 3 đường trung tuyến (hoặc mặt sau), hãy viết:</p>
+                        <ul class="space-y-2">
+                            <li class="flex items-start">
+                                <i class="fas fa-heart text-pink-500 mt-1 mr-2"></i>
+                                <span><b>3 Yếu tố</b> giúp con cân bằng cuộc sống (VD: Gia đình, Học tập, Vui chơi).</span>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-star text-yellow-500 mt-1 mr-2"></i>
+                                <span>Hoặc một <b>câu chuyện nhỏ</b> về sự cân bằng.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER MESSAGE -->
+            <div class="bg-gradient-to-r from-green-100 to-teal-100 p-6 rounded-2xl text-center border border-green-200 mt-8 transform rotate-1 hover:rotate-0 transition-transform">
+                <p class="text-2xl text-teal-800 hand-font font-bold">
+                    "Giống như tam giác cần Trọng tâm để thăng bằng,<br>
+                    Cuộc sống của chúng ta cũng cần những điểm tựa vững chắc!"
+                </p>
+                <div class="mt-4 flex justify-center space-x-2">
+                    <span class="animate-bounce delay-100 text-2xl">🌱</span>
+                    <span class="animate-bounce delay-200 text-2xl">⚖️</span>
+                    <span class="animate-bounce delay-300 text-2xl">❤️</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
