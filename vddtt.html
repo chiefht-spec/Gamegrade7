@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biệt Đội Giải Cứu Hành Tinh G</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #0f172a;
+            color: white;
+            overflow: hidden;
+        }
+        .font-scifi { font-family: 'Orbitron', sans-serif; }
+        
+        /* Hiệu ứng nền vũ trụ */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000 url('https://www.script-tutorials.com/demos/360/images/stars.png') repeat top center;
+            z-index: -1;
+            animation: move-twink-back 200s linear infinite;
+        }
+        @keyframes move-twink-back {
+            from {background-position:0 0;}
+            to {background-position:-10000px 5000px;}
+        }
+
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        .timer-bar-container {
+            width: 100%;
+            height: 10px;
+            background-color: #334155;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        .timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+            width: 100%;
+            transition: width 1s linear;
+        }
+
+        .option-btn {
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid #3b82f6;
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            background: rgba(59, 130, 246, 0.3);
+            transform: scale(1.02);
+            box-shadow: 0 0 15px #3b82f6;
+        }
+        .option-btn.correct { background: #065f46; border-color: #34d399; box-shadow: 0 0 20px #34d399; }
+        .option-btn.wrong { background: #7f1d1d; border-color: #f87171; }
+
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="stars"></div>
+
+    <!-- MÀN HÌNH CHÍNH -->
+    <div id="game-container" class="relative w-full max-w-4xl p-6 mx-4 bg-slate-900/90 border-4 border-blue-500 rounded-3xl shadow-[0_0_50px_rgba(59,130,246,0.5)]">
+        
+        <!-- HEADER -->
+        <div id="hud" class="hidden flex justify-between items-center mb-6 text-blue-300 font-scifi border-b border-blue-800 pb-4">
+            <div class="flex items-center gap-4">
+                <div class="text-xl"><i class="fas fa-shield-alt text-green-400"></i> GIÁP: <span id="lives" class="text-white">3</span></div>
+                <div class="text-xl"><i class="fas fa-star text-yellow-400"></i> ĐIỂM: <span id="score" class="text-white">0</span></div>
+            </div>
+            <div class="text-xl">MÃ KHÓA: <span id="q-progress" class="text-white">1/10</span></div>
+        </div>
+
+        <!-- MÀN HÌNH START -->
+        <div id="start-screen" class="text-center py-10">
+            <h1 class="text-5xl md:text-6xl font-scifi text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-6 drop-shadow-lg">
+                GIẢI CỨU HÀNH TINH G
+            </h1>
+            <div class="bg-blue-900/50 p-6 rounded-xl border border-blue-500 mb-8 max-w-2xl mx-auto">
+                <p class="text-lg mb-4 text-blue-100">
+                    🚀 <b>Tín hiệu SOS:</b> Lõi năng lượng trọng trường của Hành tinh G đang quá tải!
+                </p>
+                <p class="text-gray-300 mb-2">Nhiệm vụ: Giải các bài toán về <b>Đường Trung Tuyến</b> (SGK Toán 7 trang 75).</p>
+                <ul class="text-left text-sm text-gray-400 space-y-2 mt-4 bg-black/30 p-4 rounded">
+                    <li><i class="fas fa-check text-green-500 mr-2"></i> Trả lời đúng: +100 điểm.</li>
+                    <li><i class="fas fa-times text-red-500 mr-2"></i> Trả lời sai: Mất Giáp bảo vệ.</li>
+                </ul>
+            </div>
+            
+            <div class="mb-6">
+                <input type="text" id="player-name" placeholder="Nhập tên Đội trưởng..." class="bg-slate-800 border-2 border-blue-500 text-white px-6 py-3 rounded-full text-xl outline-none focus:box-shadow-blue w-64 text-center font-bold">
+            </div>
+
+            <button onclick="startGame()" class="group relative px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-full font-bold text-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.6)] hover:shadow-[0_0_40px_rgba(37,99,235,0.8)]">
+                <span class="relative z-10">KHỞI ĐỘNG TÀU <i class="fas fa-rocket ml-2 group-hover:-translate-y-1 transition-transform"></i></span>
+            </button>
+        </div>
+
+        <!-- MÀN HÌNH CÂU HỎI -->
+        <div id="quiz-screen" class="hidden">
+            <div class="timer-bar-container mb-6">
+                <div id="timer-bar" class="timer-bar"></div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Hình ảnh minh họa -->
+                <div class="md:col-span-1 bg-white rounded-xl overflow-hidden flex items-center justify-center p-2 min-h-[200px]">
+                    <canvas id="questionCanvas" width="250" height="250"></canvas>
+                </div>
+
+                <!-- Nội dung câu hỏi -->
+                <div class="md:col-span-2 flex flex-col justify-center">
+                    <h2 id="question-text" class="text-xl md:text-2xl font-bold text-blue-100 mb-6 leading-relaxed">
+                        <!-- Câu hỏi tại đây -->
+                    </h2>
+                    
+                    <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Các đáp án -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH KẾT THÚC -->
+        <div id="end-screen" class="hidden text-center py-10">
+            <div id="end-icon" class="text-8xl mb-4">🏆</div>
+            <h2 id="end-title" class="text-4xl font-bold font-scifi text-yellow-400 mb-2">NHIỆM VỤ HOÀN THÀNH</h2>
+            <p class="text-gray-300 mb-6">Đội trưởng <span id="final-name" class="font-bold text-white">...</span></p>
+            
+            <div class="flex justify-center gap-8 mb-8">
+                <div class="bg-slate-800 p-4 rounded-xl border border-blue-500 w-32">
+                    <div class="text-sm text-gray-400">Điểm số</div>
+                    <div id="final-score" class="text-3xl font-bold text-blue-400">0</div>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-xl border border-green-500 w-32">
+                    <div class="text-sm text-gray-400">Đúng</div>
+                    <div id="final-correct" class="text-3xl font-bold text-green-400">0/0</div>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="px-8 py-3 bg-purple-600 hover:bg-purple-500 rounded-full font-bold text-lg shadow-lg transition">
+                <i class="fas fa-redo mr-2"></i> Chơi lại
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MODAL GIẢI THÍCH -->
+    <div id="explain-modal" class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border-2 border-white rounded-2xl max-w-lg w-full p-6 shadow-2xl transform transition-all scale-100">
+            <div id="modal-header" class="text-2xl font-bold mb-4 flex items-center gap-2"></div>
+            
+            <div class="bg-slate-800 p-4 rounded-lg border-l-4 border-yellow-500 mb-6">
+                <p class="text-gray-400 text-xs uppercase font-bold mb-1">LỜI GIẢI CHI TIẾT:</p>
+                <p id="modal-explanation" class="text-white text-lg leading-relaxed"></p>
+            </div>
+
+            <button onclick="nextQuestion()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition">
+                TIẾP TỤC NHIỆM VỤ <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DỮ LIỆU CÂU HỎI ---
+        const questions = [
+            // LÝ THUYẾT
+            {
+                text: "<b>Câu 1:</b> Để bắt đầu, hãy xác định đâu là <b>Đường trung tuyến</b> của tam giác?",
+                options: ["Đoạn nối đỉnh tới trung điểm cạnh đối diện", "Đoạn vuông góc từ đỉnh xuống cạnh đối diện", "Đoạn chia đôi góc ở đỉnh", "Đoạn nối hai trung điểm của hai cạnh"],
+                correct: 0,
+                explain: "Định nghĩa: Đường trung tuyến là đoạn thẳng nối từ đỉnh của tam giác tới trung điểm cạnh đối diện.",
+                draw: "drawMedianConcept"
+            },
+            {
+                text: "<b>Câu 2:</b> Trọng tâm G của tam giác cách mỗi đỉnh một khoảng bằng bao nhiêu phần độ dài đường trung tuyến đi qua đỉnh ấy?",
+                options: ["1/2", "2/3", "1/3", "3/4"],
+                correct: 1,
+                explain: "Định lý: Trọng tâm cách đỉnh một khoảng bằng <b>2/3</b> độ dài đường trung tuyến.",
+                draw: "drawMedianConcept"
+            },
+            
+            // THỰC HÀNH 2 (HÌNH 7) - TAM GIÁC AEF
+            {
+                text: "<b>Thực hành 2 (Hình 7):</b> Trong tam giác AEF, G là trọng tâm, AM là trung tuyến. Hãy cho biết tỉ số <b>AG/AM</b>?",
+                options: ["1/3", "2/3", "1/2", "3/2"],
+                correct: 1,
+                explain: "Theo định lý trọng tâm: Khoảng cách từ đỉnh đến trọng tâm bằng <b>2/3</b> độ dài trung tuyến.",
+                draw: "drawFig7"
+            },
+            {
+                text: "<b>Thực hành 2 (Hình 7):</b> Tiếp tục với tam giác AEF. Tỉ số <b>GM/AM</b> bằng bao nhiêu?",
+                options: ["1/3", "2/3", "1/2", "3/4"],
+                correct: 0,
+                explain: "Vì AG chiếm 2 phần, GM chiếm 1 phần trong tổng số 3 phần của AM.<br>Nên GM/AM = <b>1/3</b>.",
+                draw: "drawFig7"
+            },
+            {
+                text: "<b>Thực hành 2 (Hình 7):</b> Tỉ số <b>GM/AG</b> bằng bao nhiêu?",
+                options: ["2", "1/2", "3/2", "1/3"],
+                correct: 1,
+                explain: "GM là 1 phần, AG là 2 phần.<br>Suy ra GM/AG = <b>1/2</b>.",
+                draw: "drawFig7"
+            },
+            {
+                text: "<b>Thực hành 2 (Áp dụng):</b> Nếu biết trung tuyến <b>AM = 9 cm</b>. Tính độ dài đoạn thẳng <b>AG</b>?",
+                options: ["3 cm", "4.5 cm", "6 cm", "9 cm"],
+                correct: 2,
+                explain: "AG = 2/3 . AM = 2/3 . 9 = <b>6</b> (cm).",
+                draw: "drawFig7_Specific"
+            },
+
+            // BÀI TẬP 1 (HÌNH 8) - TAM GIÁC MNP
+            {
+                text: "<b>Bài 1 (Hình 8):</b> Quan sát Hình 8. Trong tam giác <b>MNP</b>, đoạn thẳng <b>MR</b> là đường trung tuyến. Điểm G là trọng tâm. Hãy điền số: <b>MG = ... MR</b>",
+                options: ["1/3", "2/3", "1/2", "3/2"],
+                correct: 1,
+                explain: "MG là khoảng cách từ đỉnh đến trọng tâm.<br>Theo tính chất: MG = <b>2/3</b> MR.",
+                draw: "drawFig8"
+            },
+            {
+                text: "<b>Bài 1 (Hình 8):</b> Vẫn trong tam giác MNP. Hãy điền số: <b>GR = ... MR</b>",
+                options: ["1/3", "2/3", "1/2", "3/4"],
+                correct: 0,
+                explain: "GR là khoảng cách từ trọng tâm đến cạnh.<br>Theo tính chất: GR = <b>1/3</b> MR.",
+                draw: "drawFig8"
+            },
+            {
+                text: "<b>Bài 1 (Hình 8):</b> Hãy điền số: <b>GR = ... MG</b>",
+                options: ["2", "1/2", "3", "1.5"],
+                correct: 1,
+                explain: "GR chiếm 1 phần, MG chiếm 2 phần.<br>Vậy GR = <b>1/2</b> MG.",
+                draw: "drawFig8"
+            },
+
+            // BÀI TẬP 3 (HÌNH 9) - TAM GIÁC ABC
+            {
+                text: "<b>Bài 3 (Hình 9):</b> Cho tam giác ABC, trung tuyến AM và BN cắt nhau tại G. Biết <b>AM = 6 cm</b>. Tính <b>AG</b>?",
+                options: ["2 cm", "3 cm", "4 cm", "5 cm"],
+                correct: 2,
+                explain: "G là trọng tâm nên AG = 2/3 AM.<br>AG = 2/3 . 6 = <b>4</b> (cm).",
+                draw: "drawFig9"
+            }
+        ];
+
+        // --- GAME LOGIC ---
+        let currentQ = 0;
+        let score = 0;
+        let lives = 3;
+        let timer;
+        let timeLeft;
+        const TIME_LIMIT = 45;
+        let playerName = "";
+
+        function startGame() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            if(!nameInput) {
+                alert("Hãy nhập tên Đội trưởng!");
+                return;
+            }
+            playerName = nameInput;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('border-blue-500'); 
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQ >= questions.length) {
+                endGame(true);
+                return;
+            }
+            const q = questions[currentQ];
+            document.getElementById('q-progress').innerText = `${currentQ + 1}/${questions.length}`;
+            document.getElementById('score').innerText = score;
+            document.getElementById('lives').innerHTML = Array(lives).fill('<i class="fas fa-heart text-red-500"></i>').join(' ');
+            document.getElementById('question-text').innerHTML = q.text;
+
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn p-4 rounded-xl text-lg font-bold text-left w-full";
+                btn.innerHTML = `<span class="bg-blue-600 px-3 py-1 rounded mr-3 text-sm">${String.fromCharCode(65+idx)}</span> ${opt}`;
+                btn.onclick = () => checkAnswer(idx, btn);
+                grid.appendChild(btn);
+            });
+
+            const canvas = document.getElementById('questionCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (q.draw && window[q.draw]) window[q.draw](ctx);
+            else drawMedianConcept(ctx); 
+
+            resetTimer();
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            timeLeft = TIME_LIMIT;
+            const bar = document.getElementById('timer-bar');
+            bar.style.width = '100%';
+            bar.style.background = 'linear-gradient(90deg, #22c55e, #eab308)';
+            
+            timer = setInterval(() => {
+                timeLeft--;
+                const percent = (timeLeft / TIME_LIMIT) * 100;
+                bar.style.width = `${percent}%`;
+                if(percent < 30) bar.style.background = '#ef4444'; 
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleWrongAnswer(null, true);
+                }
+            }, 1000);
+        }
+
+        function checkAnswer(selectedIdx, btn) {
+            clearInterval(timer);
+            const q = questions[currentQ];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if (selectedIdx === q.correct) {
+                btn.classList.add('correct');
+                score += 100;
+                showModal(true, q.explain);
+            } else {
+                btn.classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+                handleWrongAnswer(btn);
+            }
+        }
+
+        function handleWrongAnswer(btn, isTimeout = false) {
+            lives--;
+            document.getElementById('game-container').classList.add('shake');
+            setTimeout(() => document.getElementById('game-container').classList.remove('shake'), 500);
+            document.getElementById('lives').innerHTML = Array(lives).fill('<i class="fas fa-heart text-red-500"></i>').join(' ');
+
+            if (lives <= 0) {
+                showModal(false, "Hệ thống phòng thủ đã vỡ!<br>" + questions[currentQ].explain, true);
+            } else {
+                let msg = isTimeout ? "Hết thời gian!" : "Tính toán sai lệch!";
+                showModal(false, msg + "<br>" + questions[currentQ].explain);
+            }
+        }
+
+        function showModal(isCorrect, text, isGameOver = false) {
+            const modal = document.getElementById('explain-modal');
+            const header = document.getElementById('modal-header');
+            const explain = document.getElementById('modal-explanation');
+            modal.classList.remove('hidden');
+            
+            if (isCorrect) {
+                header.innerHTML = '<i class="fas fa-check-circle text-green-400 text-4xl"></i> <span class="text-green-400">CHÍNH XÁC!</span>';
+            } else {
+                header.innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 text-4xl"></i> <span class="text-red-500">CẢNH BÁO!</span>';
+            }
+            explain.innerHTML = text;
+
+            const btn = modal.querySelector('button');
+            if (isGameOver) {
+                btn.innerHTML = 'KẾT THÚC <i class="fas fa-skull ml-2"></i>';
+                btn.className = "w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl transition";
+                btn.onclick = () => { endGame(false); };
+            } else {
+                btn.innerHTML = 'TIẾP TỤC <i class="fas fa-arrow-right ml-2"></i>';
+                btn.className = "w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition";
+                btn.onclick = nextQuestion;
+            }
+        }
+
+        function nextQuestion() {
+            document.getElementById('explain-modal').classList.add('hidden');
+            currentQ++;
+            loadQuestion();
+        }
+
+        function endGame(isWin) {
+            document.getElementById('explain-modal').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            const title = document.getElementById('end-title');
+            document.getElementById('final-name').innerText = playerName;
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('final-correct').innerText = `${currentQ - (3-lives) + (isWin?0:0)}/${questions.length}`;
+
+            if (isWin) {
+                title.innerText = "SỨ MỆNH THÀNH CÔNG";
+                title.className = "text-4xl font-bold font-scifi text-green-400 mb-2";
+                triggerConfetti();
+            } else {
+                title.innerText = "NHIỆM VỤ THẤT BẠI";
+                title.className = "text-4xl font-bold font-scifi text-red-500 mb-2";
+            }
+        }
+
+        // --- CÁC HÀM VẼ HÌNH (Màu tối để nổi trên nền trắng của Canvas) ---
+        function drawTriangleBase(ctx, A, B, C) {
+            ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 3; 
+            ctx.beginPath();
+            ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.lineTo(C.x, C.y); ctx.closePath();
+            ctx.stroke();
+            ctx.fillStyle = '#1e293b'; ctx.font = 'bold 16px Arial';
+        }
+
+        function drawMedianConcept(ctx) {
+            const A = {x: 125, y: 30};
+            const B = {x: 30, y: 220};
+            const C = {x: 220, y: 220};
+            const M = {x: (B.x+C.x)/2, y: 220};
+            drawTriangleBase(ctx, A, B, C);
+            ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(M.x, M.y);
+            ctx.strokeStyle = '#2563eb'; ctx.stroke();
+            ctx.fillText('A', A.x-5, A.y-10);
+            ctx.fillText('B', B.x-15, B.y+10);
+            ctx.fillText('C', C.x+5, C.y+10);
+            ctx.fillText('M', M.x-5, M.y+20);
+        }
+
+        // HÌNH 7: Tam giác AEF
+        function drawFig7(ctx) {
+            const A = {x: 125, y: 30};
+            const E = {x: 30, y: 220}; 
+            const F = {x: 220, y: 220}; 
+            const M = {x: (E.x+F.x)/2, y: 220}; 
+            const G = {x: 125, y: 30 + (220-30)*2/3};
+            drawTriangleBase(ctx, A, E, F);
+            ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(M.x, M.y);
+            ctx.strokeStyle = '#2563eb'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(G.x, G.y, 5, 0, Math.PI*2); ctx.fillStyle = '#ef4444'; ctx.fill();
+            // Ký hiệu
+            ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
+            const drawTick = (x, y) => {
+                ctx.beginPath(); ctx.moveTo(x-3, y-5); ctx.lineTo(x-3, y+5); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x+3, y-5); ctx.lineTo(x+3, y+5); ctx.stroke();
+            };
+            drawTick((E.x+M.x)/2, 220); drawTick((M.x+F.x)/2, 220);
+            // Labels
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText('A', A.x-5, A.y-10); ctx.fillText('E', E.x-15, E.y+10); ctx.fillText('F', F.x+5, F.y+10); ctx.fillText('M', M.x-5, M.y+20); ctx.fillStyle = '#ef4444'; ctx.fillText('G', G.x+10, G.y); ctx.fillStyle = '#2563eb'; ctx.fillText('Hình 7', 10, 20);
+        }
+
+        function drawFig7_Specific(ctx) {
+            drawFig7(ctx);
+            ctx.fillStyle = '#16a34a'; ctx.fillText('AM = 9cm', 150, 100);
+        }
+
+        // HÌNH 8: Tam giác MNP
+        function drawFig8(ctx) {
+            const M = {x: 100, y: 30};
+            const N = {x: 30, y: 220};
+            const P = {x: 220, y: 220};
+            const R = {x: (N.x+P.x)/2, y: 220};
+            const G = {x: 100 + (R.x-100)*2/3, y: 30 + (220-30)*2/3}; 
+            drawTriangleBase(ctx, M, N, P);
+            ctx.beginPath(); ctx.moveTo(M.x, M.y); ctx.lineTo(R.x, R.y); ctx.strokeStyle = '#2563eb'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(G.x, G.y, 5, 0, Math.PI*2); ctx.fillStyle = '#ef4444'; ctx.fill();
+            // Ký hiệu
+            ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2;
+            const drawSlash = (x, y) => { ctx.beginPath(); ctx.moveTo(x-3, y-5); ctx.lineTo(x+3, y+5); ctx.stroke(); };
+            drawSlash((N.x+R.x)/2, 220); drawSlash((R.x+P.x)/2, 220);
+            // Labels
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText('M', M.x-5, M.y-10); ctx.fillText('N', N.x-15, N.y+10); ctx.fillText('P', P.x+5, P.y+10); ctx.fillText('R', R.x-5, R.y+20); ctx.fillStyle = '#ef4444'; ctx.fillText('G', G.x+10, G.y); ctx.fillStyle = '#2563eb'; ctx.fillText('Hình 8', 10, 20);
+        }
+
+        // HÌNH 9: Tam giác ABC
+        function drawFig9(ctx) {
+            const A = {x: 125, y: 30};
+            const B = {x: 30, y: 220};
+            const C = {x: 220, y: 220};
+            const M = {x: (B.x+C.x)/2, y: 220}; 
+            const N = {x: (A.x+C.x)/2, y: (A.y+C.y)/2}; 
+            const G = {x: (A.x+B.x+C.x)/3, y: (A.y+B.y+C.y)/3};
+            drawTriangleBase(ctx, A, B, C);
+            ctx.strokeStyle = '#2563eb'; 
+            ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(M.x, M.y); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(B.x, B.y); ctx.lineTo(N.x, N.y); ctx.stroke(); 
+            ctx.beginPath(); ctx.arc(G.x, G.y, 5, 0, Math.PI*2); ctx.fillStyle = '#ef4444'; ctx.fill();
+            ctx.fillStyle = '#1e293b';
+            ctx.fillText('A', A.x-5, A.y-10); ctx.fillText('B', B.x-15, B.y+10); ctx.fillText('C', C.x+5, C.y+10); ctx.fillText('M', M.x-5, M.y+20); ctx.fillText('N', N.x+5, N.y); ctx.fillStyle = '#ef4444'; ctx.fillText('G', G.x-15, G.y+5); ctx.fillStyle = '#2563eb'; ctx.fillText('Hình 9', 10, 20);
+        }
+
+        function triggerConfetti() {
+            for(let i=0; i<50; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'absolute';
+                p.style.left = Math.random()*100 + '%';
+                p.style.top = '-10px';
+                p.style.width = '10px'; p.style.height = '10px';
+                p.style.background = ['#f00', '#0f0', '#00f', '#ff0'][Math.floor(Math.random()*4)];
+                p.style.animation = `fall ${Math.random()*3+2}s linear infinite`;
+                document.body.appendChild(p);
+            }
+            const style = document.createElement('style');
+            style.innerHTML = `@keyframes fall { to { transform: translateY(100vh) rotate(720deg); } }`;
+            document.head.appendChild(style);
+        }
+    </script>
+</body>
+</html>
